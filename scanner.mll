@@ -19,7 +19,7 @@ rule token = parse
   | "while" { WHILE } | "for" { FOR }
   | "return" { RETURN }
   | "struct" { STRUCT }
-  | "this" { THIS }
+  | "this" { THIS } | "null" { NULL }
   | "bool" { BOOL } | "int" { INT } | "string" { STRING } 
   | '"'_*'"' as str { STRING_LITERAL(str) }  (* Strings *)
   | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) } (* Integers *)
