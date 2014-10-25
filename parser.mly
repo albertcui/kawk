@@ -1,6 +1,6 @@
 %{ open Ast %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PLUS MINUS TIMES DIVIDE
+%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PLUS MINUS TIMES DIVIDE MOD
 %token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL STRING INT EOF OR AND 
 %token ACCESS STRUCT ASSERT THIS NULL
 %token <string> ID
@@ -15,7 +15,7 @@
 %left EQ NEQ
 %left LT GT LEQ GEQ
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
 
 %start program /* Start symbol */
 %type <Ast.program> program /* Type returned by a program */
@@ -61,7 +61,7 @@ stmt:
 	| IF LPAREN expr RPAREN stmt ELSE stmt 							{ If($3, $5, $7) }
 	| FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt 	{ For($3, $5, $7, $9) } 
 	| WHILE LPAREN expr RPAREN stmt 								{ While($3, $5) }
-	| STRUCT id LBRACE stmt RBRACE									{ Struct ($2, $4) }
+	| STRUCT id LBRACE stmt RBRACE									{ Struct_literal ($2, $4) }
 	| expr ASSERT expr stmt 										{ Assert ($1, $3, $4) }
 
 expr_opt:
@@ -80,6 +80,7 @@ expr:
 	| expr MINUS expr 				{ Binop($1, Sub, $3) }
 	| expr TIMES expr 				{ Binop($1, Mult, $3) }
 	| expr DIVIDE expr				{ Binop($1, Div, $3) }
+	| expr MOD expr 				{ Binop($1, Mod, $3) }
 	| expr EQ						{ Binop($1, Equal, $3) }
 	| expr NEQ						{ Binop($1, Neq, $3) }
 	| expr LT 						{ Binop($1, Less, $3) }

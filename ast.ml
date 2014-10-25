@@ -1,15 +1,16 @@
-type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Or | And
+type op = Add | Sub | Mult | Div | Mod | Equal | Neq | Less | Leq | Greater | Geq | Or | And
 
 type expr = (* Expressions *)
 	Noexpr (* for (;;) *)
 	| Id of string (* foo *)
 	| Int_literal of int (* 42 *)
-	| String_literal of string (* "foo bar" *)
+	| String_literal of string (* "foo" *)
 	| Boolean_literal of bool 
-	| Array of 
+	| Struct_literal of string * stmt 
+	| Array_access of id * int * id (* int[10] foo; *)
 	| Assign of string * expr (* foo = 42 *)
 	| Binop of expr * op * expr (* a + b *)
-	| Call of string * expr list (* foo(1, 25 *)
+	| Call of string * expr list (* foo(1, 25) *)
 	| Access of id * id (* foo.bar *)
 
 type stmt = (* Statements *)

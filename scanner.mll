@@ -9,6 +9,7 @@ rule token = parse
   | ';' { SEMI }    | ',' { COMMA }
   | '+' { PLUS }    | '-' { MINUS }
   | '*' { TIMES }   | '/' { DIVIDE }
+  | '%' { MOD }
   | '=' { ASSIGN } 
   | '<' { LT }      | '>' { GT }
   | "==" { EQ }     | "!=" { NEQ } 
