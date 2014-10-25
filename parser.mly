@@ -47,7 +47,14 @@ vdecl_list:
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	var_types ID SEMI { ($1, $2) }
+	the_type ID SEMI { ($1, $2) }
+
+the_type:
+	INT { Int }
+	| STRING { String }
+	| BOOL { Boolean }
+	| STRUCT {Struct }
+	| the_type LBRACK expr RBRACK { Array($1, $3) }
 
 stmt_list:
 	/* nothing */		{ [] }
