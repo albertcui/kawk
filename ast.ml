@@ -36,6 +36,7 @@ type var_types =
 	| String
 	| Boolean
 	| Struct of string
-	| Array of var_types * int 
+	| Array of var_types * expr
+
 
 type program = string list * func_decl list (* global vars, funcs *)

@@ -47,7 +47,14 @@ vdecl_list:
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	var_types ID SEMI { ($1, $2) }
+	the_type ID SEMI { ($1, $2) }
+
+the_type:
+	INT { Int }
+	| STRING { String }
+	| BOOL { Boolean }
+	| STRUCT ID { Struct($2) }
+	| the_type LBRACK expr RBRACK { Array($1, $3) }
 
 stmt_list:
 	/* nothing */		{ [] }
@@ -94,6 +101,7 @@ expr:
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) } 
 	| LPAREN expr RPAREN 			{ $2 }
+	| ID LBRACK expr RBRACK         { ArrayAccess($1, $3)}
 
 actuals_opt:
 	/* nothing */ 	{ [] }
