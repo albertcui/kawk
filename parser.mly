@@ -2,7 +2,7 @@
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PLUS MINUS TIMES DIVIDE
 %token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL STRING INT EOF OR AND 
-%token ACCESS STRUCT ASSERT THIS
+%token ACCESS STRUCT ASSERT THIS NULL
 %token <string> ID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL
@@ -53,7 +53,7 @@ the_type:
 	INT { Int }
 	| STRING { String }
 	| BOOL { Boolean }
-	| STRUCT {Struct }
+	| STRUCT ID { Struct($2) }
 	| the_type LBRACK expr RBRACK { Array($1, $3) }
 
 stmt_list:
@@ -81,7 +81,8 @@ expr:
 	| INT_LITERAL 					{ Int_literal($1) }
 	| STRING_LITERAL				{ String_literal($1) }
 	| BOOL_LITERAL					{ Bool_literal($1) } 
-	| THIS 							{ This ($1) } 
+	| THIS 							{ This } 
+	| NULL							{ Null }
 	| expr PLUS expr				{ Binop($1, Add, $3) }
 	| expr MINUS expr 				{ Binop($1, Sub, $3) }
 	| expr TIMES expr 				{ Binop($1, Mult, $3) }
@@ -99,6 +100,7 @@ expr:
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) } 
 	| LPAREN expr RPAREN 			{ $2 }
+	| ID LBRACK expr RBRACK         { ArrayAccess($1, $3)}
 
 actuals_opt:
 	/* nothing */ 	{ [] }

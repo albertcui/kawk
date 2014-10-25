@@ -1,10 +1,12 @@
 type op = Add | Sub | Mult | Div | Equal | Neq | Less | Leq | Greater | Geq | Or | And
 
 type expr = (* Expressions *)
-	Int_literal of int (* 42 *)
-	| Noexpr (* for (;;) *)
+	Noexpr (* for (;;) *)
 	| Id of string (* foo *)
+	| Int_literal of int (* 42 *)
 	| String_literal of string (* "foo bar" *)
+	| Boolean_literal of bool 
+	| Array of 
 	| Assign of string * expr (* foo = 42 *)
 	| Binop of expr * op * expr (* a + b *)
 	| Call of string * expr list (* foo(1, 25 *)
@@ -32,7 +34,8 @@ type var_types =
 	| Int
 	| String
 	| Boolean
-	| Struct of string * ((string * var_types) array)
+	| Struct of string
 	| Array of var_types * expr
+
 
 type program = string list * func_decl list (* global vars, funcs *)
