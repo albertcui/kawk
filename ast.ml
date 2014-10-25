@@ -18,7 +18,7 @@ type stmt = (* Statements *)
 	| For of expr * expr * expr * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 	| While of expr * stmt (* while (i<10) { i = i + 1 } *)
 	| Struct of id * stmt (* struct foo { ... }  *)
-	| Assert of expr * expr * stmt(* foo @ bar > 1 { ... } *) !!!!
+	| Assert of expr * expr * stmt(* foo @ bar > 1 { ... } *)
 
 type func_decl = {
 	fname : string; (* Name of the function *)
@@ -27,13 +27,13 @@ type func_decl = {
 	body : stmt list;
 }
 
-type var-types =
+type var_types =
 	Void
 	| Int
 	| String
 	| Boolean
-	| Struct of string * ((string * t) array)
-	| Array of t * int 
+	| Struct of string * ((string * var_types) array)
+	| Array of var_types * int 
 	| Exception of string
 
 type program = string list * func_decl list (* global vars, funcs *)
