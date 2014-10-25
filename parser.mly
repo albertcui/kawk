@@ -6,6 +6,7 @@
 %token <string> ID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL
+%token <bool> BOOL_LITERAL
 
 %nonassoc NOELSE /* Precedence and associativity of each operator */
 %nonassoc ELSE
@@ -38,7 +39,7 @@ formals_opt:
 	| formal_list		{ List.rev $1 }
 
 formal_list: 
-	ID 					{ [$1] }
+	ID 						{ [$1] }
 	| formal_list COMMA ID 	{ $3 :: $1 }
 
 vdecl_list:
@@ -68,31 +69,34 @@ expr_opt:
 	| expr 			{ $1 }
 
 
-expr: ID						{ Id($1) }
-| INT_LITERAL 					{ Int_literal($1) }
-| STRING_LITERAL				{ String_literal($1) }
-| THIS 							{ This ($1) } 
-| expr PLUS expr				{ Binop($1, Add, $3) }
-| expr MINUS expr 				{ Binop($1, Sub, $3) }
-| expr TIMES expr 				{ Binop($1, Mult, $3) }
-| expr DIVIDE expr				{ Binop($1, Div, $3) }
-| expr EQ						{ Binop($1, Equal, $3) }
-| expr NEQ						{ Binop($1, Neq, $3) }
-| expr LT 						{ Binop($1, Less, $3) }
-| expr LEQ 						{ Binop($1, Leq, $3) }
-| expr GT						{ Binop($1, Greater, $3) }
-| expr GEQ						{ Binop($1, Geq, $3) }
-| expr OR expr					{ Binop ($1, Or, $3) }
-| expr AND expr					{ Binop ($1, And, $3) }
-| expr ACCESS expr				{ Access ($1, $3) }
-| expr ASSERT expr 				{ Assert ($1, $3) }
-| ID ASSIGN expr 				{ Assign ($1, $3) }
-| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) } 
-| LPAREN expr RPAREN 			{ $2 }
+expr: 
+	ID								{ Id($1) }
+	| INT_LITERAL 					{ Int_literal($1) }
+	| STRING_LITERAL				{ String_literal($1) }
+	| BOOL_LITERAL					{ Bool_literal($1) } 
+	| THIS 							{ This ($1) } 
+	| expr PLUS expr				{ Binop($1, Add, $3) }
+	| expr MINUS expr 				{ Binop($1, Sub, $3) }
+	| expr TIMES expr 				{ Binop($1, Mult, $3) }
+	| expr DIVIDE expr				{ Binop($1, Div, $3) }
+	| expr EQ						{ Binop($1, Equal, $3) }
+	| expr NEQ						{ Binop($1, Neq, $3) }
+	| expr LT 						{ Binop($1, Less, $3) }
+	| expr LEQ 						{ Binop($1, Leq, $3) }
+	| expr GT						{ Binop($1, Greater, $3) }
+	| expr GEQ						{ Binop($1, Geq, $3) }
+	| expr OR expr					{ Binop ($1, Or, $3) }
+	| expr AND expr					{ Binop ($1, And, $3) }
+	| expr ACCESS expr				{ Access ($1, $3) }
+	| expr ASSERT expr 				{ Assert ($1, $3) }
+	| ID ASSIGN expr 				{ Assign ($1, $3) }
+	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) } 
+	| LPAREN expr RPAREN 			{ $2 }
 
 actuals_opt:
 	/* nothing */ 	{ [] }
 	| actuals_list 	{ List.rev $1 }
+
 actuals_list:
 	expr 						{ [$1] }
 	| actuals_list COMMA expr 	{ $3 :: $1 }
