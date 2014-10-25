@@ -47,9 +47,7 @@ vdecl_list:
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	INT ID SEMI			{ $2 } 
-	| STRING ID SEMI	{ $2 }
-	| BOOL ID SEMI		{ $2 }
+	var_types ID SEMI { ($1, $2) }
 
 stmt_list:
 	/* nothing */		{ [] }
