@@ -5,6 +5,7 @@ rule token = parse
   | "/*" { comment lexbuf } (* Comments *)
   | '(' { LPAREN } | ')' { RPAREN } (* Punctuation *)
   | '{' { LBRACE } | '}' { RBRACE }
+  | '[' { LBRACK } | ']' { RBRACK }
   | ';' { SEMI } | ',' { COMMA }
   | '+' { PLUS } | '-' { MINUS }
   | '*' { TIMES } | '/' { DIVIDE }
