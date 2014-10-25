@@ -17,10 +17,9 @@ rule token = parse
   | "else" { ELSE } | "if" { IF } (* Keywords *)
   | "while" { WHILE } | "for" { FOR }
   | "int" { INT } | "return" { RETURN }
+  | "assert" { ASSERT }
   | '.' { ACCESS }
   | "struct" { STRUCT }
-  | "Node" { NODE }
-  | "global" { GLOBAL }
   | "inst" { INS }
   | '"'_*'"' as str { STRING(str) }
   | eof { EOF } (* End-of-file *)
