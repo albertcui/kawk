@@ -9,19 +9,17 @@ rule token = parse
   | ';' { SEMI } | ',' { COMMA }
   | '+' { PLUS } | '-' { MINUS }
   | '*' { TIMES } | '/' { DIVIDE }
-  | '=' { ASSIGN } | "==" { EQ }
-  | "!=" { NEQ } | '<' { LT }
-  | "<=" { LEQ } | '>' { GT }
-  | ">=" { GEQ }
+  | '=' { ASSIGN } 
+  | '<' { LT } | '>' { GT }
+  | "==" { EQ } | "!=" { NEQ } 
+  | "<=" { LEQ } | ">=" { GEQ }
   | '|' { OR } | '&' { AND } (* Short circuits *)
+  | "@" { ASSERT } | '.' { ACCESS }
   | "else" { ELSE } | "if" { IF } (* Keywords *)
   | "while" { WHILE } | "for" { FOR }
-  | "int" { INT } | "return" { RETURN }
-  | "assert" { ASSERT }
-  | '.' { ACCESS }
+  | "return" { RETURN }
   | "struct" { STRUCT }
-  | "inst" { INS }
-  | '"'_*'"' as str { STRING(str) }
+  | '"'_*'"' as str { STRING(str) }  | "int" { INT }
   | eof { EOF } (* End-of-file *)
   | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) } (* integers *)
   | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
