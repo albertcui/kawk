@@ -8,14 +8,21 @@
 %token <string> STRING_LITERAL
 %token <bool> BOOL_LITERAL
 
+%nonassoc ID
 %nonassoc NOELSE /* Precedence and associativity of each operator */
 %nonassoc ELSE
+%nonassoc LBRACE RBRACE
+%nonassoc LPAREN RPAREN
+%nonassoc LBRACK RBRACK
+%left ASSERT
+%left ACCESS
 %right ASSIGN
 %left OR AND
 %left EQ NEQ
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
+%right STRUCT
 
 %start program /* Start symbol */
 %type <Ast.program> program /* Type returned by a program */
@@ -29,10 +36,10 @@ program:
 
 fdecl:
 	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-	{ { fname   = $1;
-		formals = $3;
-		locals  = List.rev $6;
-		body    = List.rev $7 } }
+	{ { fname   = $2;
+		formals = $4;
+		locals  = List.rev $7;
+		body    = List.rev $8 } }
 
 formals_opt:
 	/* nothing */		{ [] }
@@ -68,7 +75,7 @@ stmt:
 	| IF LPAREN expr RPAREN stmt ELSE stmt 							{ If($3, $5, $7) }
 	| FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt 	{ For($3, $5, $7, $9) } 
 	| WHILE LPAREN expr RPAREN stmt 								{ While($3, $5) }
-	| STRUCT id LBRACE stmt RBRACE									{ Struct_literal ($2, $4) }
+	| STRUCT ID LBRACE stmt RBRACE									{ Struct_literal ($2, $4) }
 	| expr ASSERT expr stmt 										{ Assert ($1, $3, $4) }
 
 expr_opt:
@@ -88,12 +95,12 @@ expr:
 	| expr TIMES expr 				{ Binop($1, Mult, $3) }
 	| expr DIVIDE expr				{ Binop($1, Div, $3) }
 	| expr MOD expr 				{ Binop($1, Mod, $3) }
-	| expr EQ						{ Binop($1, Equal, $3) }
-	| expr NEQ						{ Binop($1, Neq, $3) }
-	| expr LT 						{ Binop($1, Less, $3) }
-	| expr LEQ 						{ Binop($1, Leq, $3) }
-	| expr GT						{ Binop($1, Greater, $3) }
-	| expr GEQ						{ Binop($1, Geq, $3) }
+	| expr EQ expr					{ Binop($1, Equal, $3) }
+	| expr NEQ expr					{ Binop($1, Neq, $3) }
+	| expr LT expr					{ Binop($1, Less, $3) }
+	| expr LEQ expr					{ Binop($1, Leq, $3) }
+	| expr GT expr					{ Binop($1, Greater, $3) }
+	| expr GEQ expr					{ Binop($1, Geq, $3) }
 	| expr OR expr					{ Binop ($1, Or, $3) }
 	| expr AND expr					{ Binop ($1, And, $3) }
 	| expr ACCESS expr				{ Access ($1, $3) }
