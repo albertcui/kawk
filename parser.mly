@@ -28,7 +28,7 @@ program:
 	| program fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
-	ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
 	{ { fname   = $1;
 		formals = $3;
 		locals  = List.rev $6;
@@ -101,7 +101,7 @@ expr:
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) } 
 	| LPAREN expr RPAREN 			{ $2 }
-	| ID LBRACK expr RBRACK         { ArrayAccess($1, $3)}
+	| ID LBRACK expr RBRACK         { Array_access($1, $3)}
 
 actuals_opt:
 	/* nothing */ 	{ [] }
