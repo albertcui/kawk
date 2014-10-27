@@ -1,7 +1,7 @@
 %{ open Ast %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PLUS MINUS TIMES DIVIDE MOD
-%token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL STRING INT EOF OR AND 
+%token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL STRING INT EOF OR AND NOT
 %token ACCESS STRUCT ASSERT THIS NULL
 %token <string> ID
 %token <int> INT_LITERAL
@@ -12,8 +12,8 @@
 %nonassoc NOELSE /* Precedence and associativity of each operator */
 %nonassoc ELSE
 %nonassoc LBRACE RBRACE
-%nonassoc LPAREN RPAREN
 %nonassoc LBRACK RBRACK
+%nonassoc LPAREN RPAREN
 %left ASSERT
 %left ACCESS
 %right ASSIGN
@@ -22,7 +22,8 @@
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
-%right STRUCT
+%right NOT
+%nonassoc STRUCT
 
 %start program /* Start symbol */
 %type <Ast.program> program /* Type returned by a program */
@@ -78,15 +79,23 @@ the_type:
 stmt_list:
 	/* nothing */		{ [] }
 	| stmt_list stmt 	{ $2 :: $1 }
+	| stmt_list init 	{ $2 :: $1 }
+
+init:
+	STRUCT ID ID ASSIGN block SEMI { Struct_initialization($2, $3, $5) }
+	| ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($1, $5) }
 
 stmt:
 	expr SEMI														{ Expr($1) }
 	| RETURN expr SEMI												{ Return($2) }							
-	| LBRACE stmt_list RBRACE										{ Block(List.rev $2) }
+	| block															{ $1 }
 	| IF LPAREN expr RPAREN stmt %prec NOELSE 						{ If($3, $5, Block([])) } 
 	| IF LPAREN expr RPAREN stmt ELSE stmt 							{ If($3, $5, $7) }
 	| FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt 	{ For($3, $5, $7, $9) } 
 	| WHILE LPAREN expr RPAREN stmt 								{ While($3, $5) }
+
+block:
+	LBRACE stmt_list RBRACE { Block(List.rev $2) }
 
 expr_opt:
 	/* nothing */	{ Noexpr }
@@ -100,6 +109,7 @@ expr:
 	| BOOL_LITERAL					{ Bool_literal($1) } 
 	| THIS 							{ This }
 	| NULL							{ Null }
+	| NOT expr  					{ Uniop(Not, $2) }
 	| expr PLUS expr				{ Binop($1, Add, $3) }
 	| expr MINUS expr 				{ Binop($1, Sub, $3) }
 	| expr TIMES expr 				{ Binop($1, Mult, $3) }
@@ -117,10 +127,8 @@ expr:
 	| expr ASSERT expr 				{ Assert ($1, $3) }
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) }
-	| STRUCT ID ID LBRACK actuals_opt RBRACK SEMI  { Struct_initialization($2, $3, $5) }
-	| ID LBRACK RBRACK ASSIGN LBRACK actuals_opt RBRACK SEMI { Array_initialiation($1, $6) }
 	| LPAREN expr RPAREN 			{ $2 }
-	| ID LBRACK expr RBRACK         { Array_access($1, $3)}
+	| ID LBRACK expr RBRACK         { Array_access($1, $3) }
 
 actuals_opt:
 	/* nothing */ 	{ [] }

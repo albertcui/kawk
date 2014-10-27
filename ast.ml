@@ -1,4 +1,4 @@
-type op = Add | Sub | Mult | Div | Mod | Equal | Neq | Less | Leq | Greater | Geq | Or | And
+type op = Add | Sub | Mult | Div | Mod | Equal | Neq | Less | Leq | Greater | Geq | Or | And | Not
 
 type expr = (* Expressions *)
 	Noexpr (* for (;;) *)
@@ -8,11 +8,10 @@ type expr = (* Expressions *)
 	| Boolean_literal of bool 
 	| Array_access of string * int (* foo[10] *)
 	| Assign of string * expr (* foo = 42 *)
+	| Uniop of op * expr
 	| Binop of expr * op * expr (* a + b *)
 	| Call of string * expr list (* foo(1, 25) *)
 	| Access of string * string (* foo.bar *)
-	| Array_initialization string * expr list
-	| Struct_initialization string * string * expr list
 
 type stmt = (* Statements *)
 	Block of stmt list (* { ... } *)
@@ -21,6 +20,8 @@ type stmt = (* Statements *)
 	| If of expr * stmt * stmt (* if (foo == 42) {} else {} *)
 	| For of expr * expr * expr * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 	| While of expr * stmt (* while (i<10) { i = i + 1 } *)
+	| Array_initialization string * expr list
+	| Struct_initialization string * string * expr list
 
 type func_decl = {
 	fname : string; (* Name of the function *)
