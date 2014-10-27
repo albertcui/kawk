@@ -56,7 +56,7 @@ vdecl_list:
 
 vdecl:
 	the_type ID SEMI { Variable($1, $2) }
-	| the_type ID expr SEMI { Variable_Initiation($1, $2, $3)}
+	| the_type ID expr SEMI { Variable_Initiation($1, $2, $3) }
 
 sdecl:
 	STRUCT ID LBRACK struct_body RBRACK
@@ -66,7 +66,7 @@ sdecl:
 struct_body:
 	/* nothing */ { [] }
 	| struct_body vdecl { S_Varialbe_Decl($2) :: $1 }
-	| struct_body ASSERT LPAREN expr RPAREN stmt { Assert($4, $6) :: $1}
+	| struct_body ASSERT LPAREN expr RPAREN stmt { Assert($4, $6) :: $1 }
 
 the_type:
 	INT { Int }
@@ -118,7 +118,7 @@ expr:
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) }
 	| STRUCT ID ID LBRACK actuals_opt RBRACK SEMI  { Struct_initialization($2, $3, $5) }
-	
+	| ID LBRACK RBRACK ASSIGN LBRACK actuals_opt RBRACK SEMI { Array_initialiation($1, $6) }
 	| LPAREN expr RPAREN 			{ $2 }
 	| ID LBRACK expr RBRACK         { Array_access($1, $3)}
 
