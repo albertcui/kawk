@@ -33,9 +33,9 @@
 program:
 	/* nothing */ 	{ [], [], [] }
 	| program vdecl { let (str, var, func) = $1 in str, var, $2::func } /* int world = 4; */
-	| program fdecl { let (str, var, func) = $1 in str, $2::var, func }
 	| program sdecl { let (str, var, func) = $1 in $2::str, var, func }
-
+	| program fdecl { let (str, var, func) = $1 in str, $2::var, func }
+	
 fdecl:
 	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
 	{ { fname   = $2;
@@ -58,6 +58,8 @@ vdecl_list:
 vdecl:
 	the_type ID SEMI { Variable($1, $2) }
 	| the_type ID expr SEMI { Variable_Initiation($1, $2, $3) }
+	| STRUCT ID ID ASSIGN block SEMI { Struct_initialization($2, $3, $5) }
+	| the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($2, $6) }
 
 sdecl:
 	STRUCT ID LBRACK struct_body RBRACK
@@ -65,8 +67,8 @@ sdecl:
 		sbody = List.rev $4 } }
 
 struct_body:
-	/* nothing */ { [] }
-	| struct_body vdecl { S_Varialbe_Decl($2) :: $1 }
+	/* nothing  { [] }*/
+	struct_body vdecl { S_Varialbe_Decl($2) :: $1 }
 	| struct_body ASSERT LPAREN expr RPAREN stmt { Assert($4, $6) :: $1 }
 
 the_type:
@@ -79,11 +81,10 @@ the_type:
 stmt_list:
 	/* nothing */		{ [] }
 	| stmt_list stmt 	{ $2 :: $1 }
-	| stmt_list init 	{ $2 :: $1 }
+	/*| stmt_list init 	{ $2 :: $1 }*/
 
-init:
-	STRUCT ID ID ASSIGN block SEMI { Struct_initialization($2, $3, $5) }
-	| ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($1, $5) }
+/*init:
+	ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($1, $5) }*/
 
 stmt:
 	expr SEMI														{ Expr($1) }
@@ -111,7 +112,7 @@ expr:
 	| NULL							{ Null }
 	| NOT expr  					{ Uniop(Not, $2) }
 	| expr PLUS expr				{ Binop($1, Add, $3) }
-	| expr MINUS expr 				{ Binop($1, Sub, $3) }
+	/*| expr MINUS expr 				{ Binop($1, Sub, $3) }
 	| expr TIMES expr 				{ Binop($1, Mult, $3) }
 	| expr DIVIDE expr				{ Binop($1, Div, $3) }
 	| expr MOD expr 				{ Binop($1, Mod, $3) }
@@ -122,7 +123,7 @@ expr:
 	| expr GT expr					{ Binop($1, Greater, $3) }
 	| expr GEQ expr					{ Binop($1, Geq, $3) }
 	| expr OR expr					{ Binop ($1, Or, $3) }
-	| expr AND expr					{ Binop ($1, And, $3) }
+	| expr AND expr					{ Binop ($1, And, $3) }*/
 	| expr ACCESS expr				{ Access ($1, $3) }
 	| expr ASSERT expr 				{ Assert ($1, $3) }
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
