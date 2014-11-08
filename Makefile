@@ -13,5 +13,7 @@ ast:
 pretty:
 	ocamlc -c pretty_printer.ml
 
+.PHONEY: clean
+
 clean: 
-	rm -f *.mli *.cmo *.cmi 
+	rm -f *.cmo *.cmi 
