@@ -2,7 +2,7 @@
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PLUS MINUS TIMES DIVIDE MOD
 %token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL STRING INT EOF OR AND NOT
-%token ACCESS STRUCT ASSERT THIS NULL
+%token ACCESS STRUCT ASSERT THIS NULL VOID
 %token <string> ID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL
@@ -121,7 +121,6 @@ expr:
 	| expr GEQ expr					{ Binop($1, Geq, $3) }
 	| expr OR expr					{ Binop ($1, Or, $3) }
 	| expr AND expr					{ Binop ($1, And, $3) }
-	/*| expr ASSERT expr 				{ Assert ($1, $3) }*/
 	| ID ACCESS ID					{ Access ($1, $3) }
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) }

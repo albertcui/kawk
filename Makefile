@@ -12,3 +12,6 @@ ast:
 
 pretty:
 	ocamlc -c pretty_printer.ml
+
+clean: 
+	rm -f *.mli *.cmo *.cmi 
