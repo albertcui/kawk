@@ -48,7 +48,7 @@ formals_opt:
 	| formal_list		{ List.rev $1 }
 
 formal_list: 
-	ID 						{ [$1] }
+	the_type ID 						{ [$1] }
 	| formal_list COMMA ID 	{ $3 :: $1 }
 
 vdecl_list:
@@ -56,10 +56,10 @@ vdecl_list:
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	the_type ID SEMI { Variable($1, $2) }
-	| the_type ID expr SEMI { Variable_Initiation($1, $2, $3) }
-	| STRUCT ID ID ASSIGN block SEMI { Struct_initialization($2, $3, $5) }
+	STRUCT ID ID ASSIGN block SEMI { Struct_initialization($2, $3, $5) }
 	| the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($2, $6) }
+	| the_type ID SEMI { Variable($1, $2) }
+	| the_type ID expr SEMI { Variable_Initiation($1, $2, $3) }
 
 sdecl:
 	STRUCT ID LBRACK struct_body RBRACK
