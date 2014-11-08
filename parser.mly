@@ -29,9 +29,9 @@
 
 program:
 	/* nothing */ 	{ [], [], [] }
-	| program vdecl { let (str, var, func) = $1 in str, var, $2::func } /* int world = 4; */
+	| program vdecl { let (str, var, func) = $1 in str, $2::var, func } /* int world = 4; */
 	| program sdecl { let (str, var, func) = $1 in $2::str, var, func }
-	| program fdecl { let (str, var, func) = $1 in str, $2::var, func }
+	| program fdecl { let (str, var, func) = $1 in str, var, $2::func }
 	
 fdecl:
 	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
@@ -45,18 +45,18 @@ formals_opt:
 	| formal_list		{ List.rev $1 }
 
 formal_list: 
-	the_type ID 						{ [$1] }
-	| formal_list COMMA ID 	{ $3 :: $1 }
+	the_type ID 			{ [Variable($1, $2)] }
+	| formal_list COMMA the_type ID 	{ Variable($3, $4) :: $1 }
 
 vdecl_list:
 	/* nothing */		{ [] }
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	STRUCT ID ID ASSIGN block SEMI { Struct_initialization($2, $3, $5) }
-	| the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($2, $6) }
+	STRUCT ID ID ASSIGN block SEMI { Struct_Initialization($2, $3, $5) }
+	| the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($2, $6) }
 	| the_type ID SEMI { Variable($1, $2) }
-	| the_type ID expr SEMI { Variable_Initiation($1, $2, $3) }
+	| the_type ID expr SEMI { Variable_Initialization($1, $2, $3) }
 
 sdecl:
 	STRUCT ID LBRACK struct_body RBRACK
@@ -65,7 +65,7 @@ sdecl:
 
 struct_body:
 	/* nothing  { [] }*/
-	struct_body vdecl { S_Varialbe_Decl($2) :: $1 }
+	struct_body vdecl { S_Variable_Decl($2) :: $1 }
 	| struct_body ASSERT LPAREN expr RPAREN stmt { Assert($4, $6) :: $1 }
 
 the_type:
@@ -81,7 +81,7 @@ stmt_list:
 	| stmt_list init 	{ $2 :: $1 }
 
 init:
-	ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($1, $5) }
+	ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($1, $5) }
 
 stmt:
 	expr SEMI														{ Expr($1) }
