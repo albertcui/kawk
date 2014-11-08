@@ -11,9 +11,7 @@
 %nonassoc ID
 %nonassoc NOELSE /* Precedence and associativity of each operator */
 %nonassoc ELSE
-%nonassoc LBRACE RBRACE
 %nonassoc LBRACK RBRACK
-%nonassoc LPAREN RPAREN
 %left ASSERT
 %left ACCESS
 %right ASSIGN
@@ -23,7 +21,6 @@
 %left PLUS MINUS
 %left TIMES DIVIDE MOD
 %right NOT
-%nonassoc STRUCT
 
 %start program /* Start symbol */
 %type <Ast.program> program /* Type returned by a program */
@@ -81,10 +78,10 @@ the_type:
 stmt_list:
 	/* nothing */		{ [] }
 	| stmt_list stmt 	{ $2 :: $1 }
-	/*| stmt_list init 	{ $2 :: $1 }*/
+	| stmt_list init 	{ $2 :: $1 }
 
-/*init:
-	ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($1, $5) }*/
+init:
+	ID LBRACK RBRACK ASSIGN block SEMI { Array_initialiation($1, $5) }
 
 stmt:
 	expr SEMI														{ Expr($1) }
@@ -112,7 +109,7 @@ expr:
 	| NULL							{ Null }
 	| NOT expr  					{ Uniop(Not, $2) }
 	| expr PLUS expr				{ Binop($1, Add, $3) }
-	/*| expr MINUS expr 				{ Binop($1, Sub, $3) }
+	| expr MINUS expr 				{ Binop($1, Sub, $3) }
 	| expr TIMES expr 				{ Binop($1, Mult, $3) }
 	| expr DIVIDE expr				{ Binop($1, Div, $3) }
 	| expr MOD expr 				{ Binop($1, Mod, $3) }
@@ -123,7 +120,7 @@ expr:
 	| expr GT expr					{ Binop($1, Greater, $3) }
 	| expr GEQ expr					{ Binop($1, Geq, $3) }
 	| expr OR expr					{ Binop ($1, Or, $3) }
-	| expr AND expr					{ Binop ($1, And, $3) }*/
+	| expr AND expr					{ Binop ($1, And, $3) }
 	| expr ACCESS expr				{ Access ($1, $3) }
 	| expr ASSERT expr 				{ Assert ($1, $3) }
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
