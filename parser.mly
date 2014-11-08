@@ -54,7 +54,7 @@ vdecl_list:
 
 vdecl:
 	STRUCT ID ID ASSIGN block SEMI { Struct_Initialization($2, $3, $5) }
-	| the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($2, $6) }
+	| the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($1, $2, $6) }
 	| the_type ID SEMI { Variable($1, $2) }
 	| the_type ID expr SEMI { Variable_Initialization($1, $2, $3) }
 
@@ -66,7 +66,7 @@ sdecl:
 struct_body:
 	/* nothing  { [] }*/
 	struct_body vdecl { S_Variable_Decl($2) :: $1 }
-	| struct_body ASSERT LPAREN expr RPAREN stmt { Assert($4, $6) :: $1 }
+	| struct_body ASSERT LPAREN expr RPAREN stmt_list { Assert($4, $6) :: $1 }
 
 the_type:
 	INT { Int }
@@ -78,10 +78,10 @@ the_type:
 stmt_list:
 	/* nothing */		{ [] }
 	| stmt_list stmt 	{ $2 :: $1 }
-	| stmt_list init 	{ $2 :: $1 }
+	/*| stmt_list init 	{ $2 :: $1 }
 
 init:
-	ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($1, $5) }
+	ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($1, $5) }*/
 
 stmt:
 	expr SEMI														{ Expr($1) }
@@ -102,9 +102,9 @@ expr_opt:
 
 expr: 
 	ID								{ Id($1) }
-	| INT_LITERAL 					{ Int_literal($1) }
+	| INT_LITERAL 					{ Integer_literal($1) }
 	| STRING_LITERAL				{ String_literal($1) }
-	| BOOL_LITERAL					{ Bool_literal($1) } 
+	| BOOL_LITERAL					{ Boolean_literal($1) } 
 	| THIS 							{ This }
 	| NULL							{ Null }
 	| NOT expr  					{ Uniop(Not, $2) }
@@ -121,8 +121,8 @@ expr:
 	| expr GEQ expr					{ Binop($1, Geq, $3) }
 	| expr OR expr					{ Binop ($1, Or, $3) }
 	| expr AND expr					{ Binop ($1, And, $3) }
-	| expr ACCESS expr				{ Access ($1, $3) }
-	| expr ASSERT expr 				{ Assert ($1, $3) }
+	/*| expr ASSERT expr 				{ Assert ($1, $3) }*/
+	| ID ACCESS ID					{ Access ($1, $3) }
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) }
 	| LPAREN expr RPAREN 			{ $2 }
