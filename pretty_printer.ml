@@ -33,7 +33,7 @@ let rec print_stmt = function
 	Block(stmt_list) -> print_string " {"; List.iter print_stmt stmt_list; print_string "}"
 	| Expr(expr) -> print_expr expr
 	| Return(expr) -> print_string "return "; print_expr expr
-	| If(expr, stmt1, stmt2) -> print_string "if ("); print_expr expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
+	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
 	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr expr1; print_string ";"; print_expr expr2; print_string ";"; print_expr expr3; print_stmt stmt 
 	| While(expr, stmt) -> print_string "while ("; print_expr expr; print_string ")"; print_stmt stmt
 
@@ -51,8 +51,15 @@ let rec print_var_decl = function
 	| Array_Initialization(var_types, str, stmt) -> print_var_types var_types; Printf.printf " %s =" str; print_stmt stmt
 	| Struct_Initialization(str1, str2, stmt) -> Printf.printf("struct %s %s =") str1, str2; print_stmt stmt
 
-let rec print_struct_body = function
-	asdklfjalsdf oalsjdfljasd 
+let print_struct_body = function
+	S_Variable_Decl(var_decl) -> print_var_types var_decl
+	| Assert(expr, stmt_list) -> print_string "@ ("; print_expr expr; print_string " )"; List.iter print_stmt stmt
+
+let rec print_struct_decl s = function
+	print_string s.sname
+	| List.iter print_struct_body s.sbody
+	
+
 
 (*
 let print_var_decl = 
