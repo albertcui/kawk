@@ -16,4 +16,4 @@ pretty:
 .PHONEY: clean
 
 clean: 
-	rm -f *.cmo *.cmi 
+	rm -f pretty *.cmo *.cmi 
