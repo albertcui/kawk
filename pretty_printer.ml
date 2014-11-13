@@ -55,25 +55,18 @@ let print_struct_body = function
 	S_Variable_Decl(var_decl) -> print_var_types var_decl
 	| Assert(expr, stmt_list) -> print_string "@ ("; print_expr expr; print_string " )"; List.iter print_stmt stmt
 
-let rec print_struct_decl s = function
-	print_string s.sname
-	| List.iter print_struct_body s.sbody
-	
+let print_struct_decl s =
+	print_string s.sname; 
+	List.iter print_struct_body s.sbody;
 
+let print_func_decl f =
+	print_string f.fname; 
+	List.iter print_var_decl f.formals;
+	List.iter print_var_decl f.locals;
+	List.iter print_stmt f.body;
 
-(*
-let print_var_decl = 
-	Variable -> print_var_types fst; print_string " " ^ snd
-	| Variable_Initiation(type, name, expr) -> print_var_types type; print_string " " ^ name; print_expr expr;
-
-
-let print ((structs, vars, funcs) : program) : unit =
-	let rec print_structs : (struct_decl) =
-		| [] -> []
-		| hd::tl -> print_string "struct " ^ hd.sname ^ "{\n";
-			let rec print_s_body (sb) : unit =
-				List.iter (fun line -> 
-					S_Variable_Decl ->   
-					| Assert -> ) sb;
-				print_structs tl;
-*)
+let print_program p = 
+	let (structs, vars, funcs) = p in 
+		List.iter print_func_decl structs;
+		List.iter print_var_decl vars;
+		List.iter print_func_decl funcs;
