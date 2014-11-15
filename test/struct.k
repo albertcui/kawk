@@ -1,6 +1,3 @@
-struct test {
-	int mem;
-};
-
-struct test s;
-s.mem = 10;
+int main () {
+	int a=1;
+}

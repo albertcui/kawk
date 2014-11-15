@@ -18,8 +18,8 @@ let print_op = function
 
 let rec print_expr = function
 	Noexpr -> print_string ""
-	| This -> print_string "this"
-	| Null -> print_string "null"
+	| This -> print_string " this"
+	| Null -> print_string " null"
 	| Id(id) -> Printf.printf " %s" id
 	| Integer_literal(i) -> Printf.printf " %d" i 
 	| String_literal(str) -> Printf.printf " %S" str
@@ -34,17 +34,17 @@ let rec print_expr = function
 let rec print_stmt = function
 	Block(stmt_list) -> print_string " {"; List.iter print_stmt stmt_list; print_string "}"
 	| Expr(expr) -> print_expr expr
-	| Return(expr) -> print_string "return "; print_expr expr
-	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
-	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr expr1; print_string ";"; print_expr expr2; print_string ";"; print_expr expr3; print_stmt stmt 
-	| While(expr, stmt) -> print_string "while ("; print_expr expr; print_string ")"; print_stmt stmt
+	| Return(expr) -> print_string "\nreturn "; print_expr expr
+	| If(expr, stmt1, stmt2) -> print_string "\nif ("; print_expr expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
+	| For(expr1, expr2, expr3, stmt) -> print_string "\nfor ("; print_expr expr1; print_string ";"; print_expr expr2; print_string ";"; print_expr expr3; print_stmt stmt 
+	| While(expr, stmt) -> print_string "\nwhile ("; print_expr expr; print_string ")"; print_stmt stmt
 
 let rec print_var_types = function
-	Void -> print_string "void"
-	| Int -> print_string "int"
-	| String -> print_string "str" 
-	| Boolean -> print_string "bool"
-	| Struct(str) -> Printf.printf "struct %s" str 
+	Void -> print_string " void"
+	| Int -> print_string " int"
+	| String -> print_string " str" 
+	| Boolean -> print_string " bool"
+	| Struct(str) -> Printf.printf " struct %s" str 
 	| Array(var_types, expr) -> print_var_types var_types; print_string "["; print_expr expr; print_string "]"
 
 let rec print_var_decl = function
@@ -55,7 +55,7 @@ let rec print_var_decl = function
 
 let print_struct_body = function
 	S_Variable_Decl(var_decl) -> print_var_decl var_decl
-	| Assert(expr, stmt_list) -> print_string "@("; print_expr expr; print_string " )"; List.iter print_stmt stmt_list
+	| Assert(expr, stmt_list) -> print_string " @("; print_expr expr; print_string " )"; List.iter print_stmt stmt_list
 
 let print_struct_decl s =
 	print_string s.sname; 
