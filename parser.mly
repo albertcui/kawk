@@ -65,8 +65,9 @@ sdecl:
 		sbody = List.rev $4 } }
 
 struct_body:
-	/* nothing  { [] }*/
-	struct_body vdecl { S_Variable_Decl($2) :: $1 }
+	vdecl { [S_Variable_Decl($1)] }
+	| ASSERT LPAREN expr RPAREN stmt_list { [Assert($3, $5)] }
+	| struct_body vdecl { S_Variable_Decl($2) :: $1 }
 	| struct_body ASSERT LPAREN expr RPAREN stmt_list { Assert($4, $6) :: $1 }
 
 the_type:
