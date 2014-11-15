@@ -47,6 +47,7 @@ type struct_decl = {
 }
 
 type func_decl = {
+	ftype: var_types;
 	fname : string; (* Name of the function *)
 	formals : var_decl list; (* Formal argument names *)
 	locals : var_decl list; (* Locally defined variables *)
