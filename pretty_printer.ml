@@ -35,6 +35,12 @@ let rec print_expr = function
 let print_expr_semi e = 
 	print_expr e; print_string ";\n"
 
+let rec print_expr_list = function
+	[] -> print_string ""
+	| hd::[] -> print_expr hd
+	| hd::tl -> print_expr hd; print_string "; "; print_expr_list tl 
+
+
 let rec print_stmt = function
 	Block(stmt_list) -> print_string "{"; List.iter print_stmt stmt_list; print_string "}\n"
 	| Expr(expr) -> print_expr_semi expr
@@ -54,7 +60,7 @@ let rec print_var_types = function
 let rec print_var_decl = function
 	Variable(var_types, str) -> print_var_types var_types; print_string (str ^ ";\n")
 	| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf "%s = " str; print_expr_semi expr
-	| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s = { " str; List.iter print_expr expr_list; print_string "};\n"
+	| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s[] = { " str; print_expr_list expr_list; print_string "};\n"
 	| Struct_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s = { " str; List.iter print_expr expr_list; print_string "};\n"
 
 
