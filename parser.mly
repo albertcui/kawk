@@ -54,10 +54,10 @@ vdecl_list:
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	STRUCT ID ID ASSIGN block SEMI { Struct_Initialization($2, $3, $5) }
-	| the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($1, $2, $6) }
+	the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($1, $2, $6) }
 	| the_type ID SEMI { Variable($1, $2) }
 	| the_type ID ASSIGN expr SEMI { Variable_Initialization($1, $2, $4) }
+	| the_type ID ASSIGN block SEMI { Struct_Initialization($2, $3, $5) }
 
 sdecl:
 	STRUCT ID LBRACE struct_body RBRACE
