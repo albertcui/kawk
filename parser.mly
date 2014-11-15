@@ -60,7 +60,7 @@ vdecl:
 	| the_type ID ASSIGN expr SEMI { Variable_Initialization($1, $2, $4) }
 
 sdecl:
-	STRUCT ID LBRACK struct_body RBRACK
+	STRUCT ID LBRACE struct_body RBRACE
 	{ { sname = $2;
 		sbody = List.rev $4 } }
 
