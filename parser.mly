@@ -61,8 +61,8 @@ vdecl:
 
 expr_list:
 	expr { [$1] }
-	| expr_list expr { $2 :: $1 }
-	
+	| expr_list expr SEMI { $2 :: $1 }
+
 sdecl:
 	STRUCT ID LBRACE struct_body RBRACE
 	{ { sname = $2;
