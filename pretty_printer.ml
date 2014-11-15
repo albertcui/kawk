@@ -62,6 +62,7 @@ let print_struct_decl s =
 	List.iter print_struct_body s.sbody
 
 let print_func_decl f =
+	print_var_types f.ftype;
 	print_string f.fname; 
 	List.iter print_var_decl f.formals; 
 	List.iter print_var_decl f.locals; 
