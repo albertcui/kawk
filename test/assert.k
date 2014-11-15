@@ -1,3 +1,6 @@
-struct Player {
-	int size;
+
+struct potato { 
+int size; 
+int potat; 
+@(size > 1) {}
 }

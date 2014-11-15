@@ -29,8 +29,8 @@
 
 program:
 	/* nothing */ 	{ [], [], [] }
-	| program vdecl { let (str, var, func) = $1 in str, $2::var, func } /* int world = 4; */
 	| program sdecl { let (str, var, func) = $1 in $2::str, var, func }
+	| program vdecl { let (str, var, func) = $1 in str, $2::var, func } /* int world = 4; */
 	| program fdecl { let (str, var, func) = $1 in str, var, $2::func }
 	
 fdecl:
