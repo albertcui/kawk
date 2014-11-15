@@ -18,6 +18,8 @@ let print_op = function
 
 let rec print_expr = function
 	Noexpr -> print_string ""
+	| This -> print_string "this"
+	| Null -> print_string "null"
 	| Id(id) -> Printf.printf " %s" id
 	| Integer_literal(i) -> Printf.printf " %d" i 
 	| String_literal(str) -> Printf.printf " %S" str
@@ -49,24 +51,29 @@ let rec print_var_decl = function
 	Variable(var_types, str) -> print_var_types var_types; print_string str
 	| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf " %s =" str; print_expr expr
 	| Array_Initialization(var_types, str, stmt) -> print_var_types var_types; Printf.printf " %s =" str; print_stmt stmt
-	| Struct_Initialization(str1, str2, stmt) -> Printf.printf("struct %s %s =") str1, str2; print_stmt stmt
+	| Struct_Initialization(str1, str2, stmt) -> Printf.printf " struct %s %s =" str1 str2; print_stmt stmt
 
 let print_struct_body = function
-	S_Variable_Decl(var_decl) -> print_var_types var_decl
-	| Assert(expr, stmt_list) -> print_string "@ ("; print_expr expr; print_string " )"; List.iter print_stmt stmt
+	S_Variable_Decl(var_decl) -> print_var_decl var_decl
+	| Assert(expr, stmt_list) -> print_string "@("; print_expr expr; print_string " )"; List.iter print_stmt stmt_list
 
 let print_struct_decl s =
 	print_string s.sname; 
-	List.iter print_struct_body s.sbody;
+	List.iter print_struct_body s.sbody
 
 let print_func_decl f =
 	print_string f.fname; 
-	List.iter print_var_decl f.formals;
-	List.iter print_var_decl f.locals;
-	List.iter print_stmt f.body;
+	List.iter print_var_decl f.formals; 
+	List.iter print_var_decl f.locals; 
+	List.iter print_stmt f.body
 
 let print_program p = 
-	let (structs, vars, funcs) = p in 
+	let program(structs, vars, funcs) = p in 	
 		List.iter print_func_decl structs;
 		List.iter print_var_decl vars;
-		List.iter print_func_decl funcs;
+		List.iter print_func_decl funcs
+
+let _ =
+let lexbuf = Lexing.from_channel stdin in
+let program = Parser.program Scanner.token lexbuf in
+print_program program
