@@ -25,19 +25,22 @@ let rec print_expr = function
 	| String_literal(str) -> Printf.printf " %S" str
 	| Boolean_literal(b) -> Printf.printf " %B" b
 	| Array_access(str, expr) -> Printf.printf " %s[" str; print_expr expr; print_string "]"
-	| Assign(str, expr) -> Printf.printf " %s" str; print_expr expr
+	| Assign(str, expr) -> Printf.printf " %s =" str; print_expr expr
 	| Uniop(op, expr) -> print_op op; print_expr expr
 	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2
 	| Call(str, expr_list) -> Printf.printf " %s" str; List.iter print_expr expr_list
-	| Access(str1, str2) -> Printf.printf " %s.%s" str1 str2
+	| Access(str1, str2) -> Printf.printf " %s.%s" str1 str2 
+
+let print_expr_semi e = 
+	print_expr e; print_string ";\n"
 
 let rec print_stmt = function
 	Block(stmt_list) -> print_string " {"; List.iter print_stmt stmt_list; print_string "}"
-	| Expr(expr) -> print_expr expr
-	| Return(expr) -> print_string "\nreturn "; print_expr expr
-	| If(expr, stmt1, stmt2) -> print_string "\nif ("; print_expr expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
-	| For(expr1, expr2, expr3, stmt) -> print_string "\nfor ("; print_expr expr1; print_string ";"; print_expr expr2; print_string ";"; print_expr expr3; print_stmt stmt 
-	| While(expr, stmt) -> print_string "\nwhile ("; print_expr expr; print_string ")"; print_stmt stmt
+	| Expr(expr) -> print_expr_semi expr
+	| Return(expr) -> print_string "return "; print_expr_semi expr
+	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr_semi expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
+	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr_semi expr1; print_string ";"; print_expr_semi expr2; print_string ";"; print_expr expr3; print_stmt stmt 
+	| While(expr, stmt) -> print_string "while ("; print_expr_semi expr; print_string ")"; print_stmt stmt
 
 let rec print_var_types = function
 	Void -> print_string " void"
@@ -45,17 +48,17 @@ let rec print_var_types = function
 	| String -> print_string " str" 
 	| Boolean -> print_string " bool"
 	| Struct(str) -> Printf.printf " struct %s" str 
-	| Array(var_types, expr) -> print_var_types var_types; print_string "["; print_expr expr; print_string "]"
+	| Array(var_types, expr) -> print_var_types var_types; print_string "["; print_expr_semi expr; print_string "]"
 
 let rec print_var_decl = function
-	Variable(var_types, str) -> print_var_types var_types; print_string str
-	| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf " %s =" str; print_expr expr
+	Variable(var_types, str) -> print_var_types var_types; print_string (" " ^ str ^ ";\n")
+	| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf " %s =" str; print_expr_semi expr
 	| Array_Initialization(var_types, str, stmt) -> print_var_types var_types; Printf.printf " %s =" str; print_stmt stmt
 	| Struct_Initialization(str1, str2, stmt) -> Printf.printf " struct %s %s =" str1 str2; print_stmt stmt
 
 let print_struct_body = function
 	S_Variable_Decl(var_decl) -> print_var_decl var_decl
-	| Assert(expr, stmt_list) -> print_string " @("; print_expr expr; print_string " )"; List.iter print_stmt stmt_list
+	| Assert(expr, stmt_list) -> print_string " @("; print_expr_semi expr; print_string " )"; List.iter print_stmt stmt_list
 
 let print_struct_decl s =
 	print_string s.sname; 
@@ -63,10 +66,13 @@ let print_struct_decl s =
 
 let print_func_decl f =
 	print_var_types f.ftype;
-	print_string f.fname; 
+	print_string (" " ^ f.fname); 
+	print_string "(";
 	List.iter print_var_decl f.formals; 
+	print_string ") {\n";
 	List.iter print_var_decl f.locals; 
-	List.iter print_stmt f.body
+	List.iter print_stmt f.body;
+	print_string "}\n"
 
 let print_program p = 
 	let (structs, vars, funcs) = p in 	
