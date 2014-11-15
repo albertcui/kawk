@@ -36,7 +36,7 @@ let print_expr_semi e =
 	print_expr e; print_string ";\n"
 
 let rec print_stmt = function
-	Block(stmt_list) -> print_string "{"; List.iter print_stmt stmt_list; print_string "} "
+	Block(stmt_list) -> print_string "{"; List.iter print_stmt stmt_list; print_string "}\n"
 	| Expr(expr) -> print_expr_semi expr
 	| Return(expr) -> print_string "return "; print_expr_semi expr
 	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr_semi expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
@@ -57,13 +57,17 @@ let rec print_var_decl = function
 	| Array_Initialization(var_types, str, stmt) -> print_var_types var_types; Printf.printf "%s = " str; print_stmt stmt
 	| Struct_Initialization(str1, str2, stmt) -> Printf.printf "struct %s %s = " str1 str2; print_stmt stmt
 
+
 let print_struct_body = function
 	S_Variable_Decl(var_decl) -> print_var_decl var_decl
-	| Assert(expr, stmt_list) -> print_string "@("; print_expr_semi expr; print_string ") "; List.iter print_stmt stmt_list
+	| Assert(expr, stmt_list) -> print_string "@("; print_expr expr; print_string ") "; List.iter print_stmt stmt_list
 
 let print_struct_decl s =
+	print_string "struct ";
 	print_string s.sname; 
-	List.iter print_struct_body s.sbody
+	print_string " {\n";
+	List.iter print_struct_body s.sbody;
+	print_string "}"
 
 let print_func_decl f =
 	print_var_types f.ftype;
