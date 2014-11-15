@@ -1,4 +1,5 @@
 open Ast
+open Lexing
 
 let print_op = function
 	Add -> print_string "+ "
@@ -80,7 +81,14 @@ let print_program p =
 		List.iter print_var_decl vars;
 		List.iter print_func_decl (List.rev funcs)
 
+let print_position outx lexbuf =
+  let pos = lexbuf.lex_curr_p in
+  Printf.fprintf outx "%s:%d:%d" pos.pos_fname
+    pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
+
 let _ =
-let lexbuf = Lexing.from_channel stdin in
-let program = Parser.program Scanner.token lexbuf in
-print_program program
+	let lexbuf = Lexing.from_channel stdin in
+	let program = try
+	Parser.program Scanner.token lexbuf 
+	with _ -> Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; exit (-1) in
+	print_program program
