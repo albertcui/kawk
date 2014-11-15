@@ -68,8 +68,8 @@ let print_func_decl f =
 	List.iter print_stmt f.body
 
 let print_program p = 
-	let program(structs, vars, funcs) = p in 	
-		List.iter print_func_decl structs;
+	let (structs, vars, funcs) = p in 	
+		List.iter print_struct_decl structs;
 		List.iter print_var_decl vars;
 		List.iter print_func_decl funcs
 
