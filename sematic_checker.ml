@@ -215,7 +215,7 @@ let process_var_decl (scope : symbol_table) v =
 			Struct(id) -> 
 				try
 					let s = find_struct scope id in
-					
+
 				with
 				| _ -> failwith "Unknown"
 			| _ -> raise Failure "Not a struct"
@@ -235,7 +235,8 @@ let process_func_decl (env : translation_environment) f =
 		{ env with scope = scope' }
 
 let check_struct (scope : symbol_table) s =
-	S_Variable_Decl -> 
+	S_Variable_Decl ->
+
 let process_struct_decl (env : translation_environment) s =
 	try
 		let _ = find_func env.scope.structs s in
@@ -245,10 +246,13 @@ let process_struct_decl (env : translation_environment) s =
 		let scope' = { env.scope with functions = env.scope.functions :: f } in
 		{ env with scope = scope' }
 
+
+
+(* TO DO FIX THIS*)
 let process_global_decl (env : translation_environment) g =
 	try
-		let _ = find_func env.scope.functions f in
-			raise Failure ("Function already declared with name " ^ f.fname)
+		let _ = find_id env.scope.variables g in
+			raise Failure ("Variable already declared with name " ^ f.fname)
 	with Not_found ->
 		let scope' = { env.scope with parent = Some(env.scope); variables = f.locals::f.formals } in
 		let scope' = List.fold_left check_statement scope' f.body in
