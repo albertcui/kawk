@@ -37,6 +37,7 @@ type var_decl =
 	| Array_Initialization of var_types * string * expr list
 	| Struct_Initialization of var_types * string * expr list
 
+(* SHOULD MAKE VAR_DECL AND ASSERTS SEPARATE!!!!! *)
 type struct_body = 
 	| S_Variable_Decl of var_decl (* int foo *)
 	| Assert of expr * stmt list (* @ (bar > 1) { ... } *)

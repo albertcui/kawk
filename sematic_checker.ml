@@ -18,6 +18,12 @@ type symbol_table = {
 	structs : struct_decl list
 }
 
+let find_struct (s : struct_decl list) s =
+	List.find(fun c -> c.sname = s.sname) s
+
+
+let find_func (l : func_decl list) f =
+	List.find(fun c -> c.fname = f.fname) l
 (* 
 let rec find_variable (scope : symbol_table) name =
 	try
@@ -196,10 +202,50 @@ let process_func_formals (env : translation_environment) f =
 	let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
 	let scope' = List.iter (fun var -> scope.variables:: head) *)
 
-let find_func (l : func_decl list) f =
-	List.find(fun c -> c.fname = f.fname) l
+let process_var_decl (scope : symbol_table) v =
+	let tuple = match v with
+		Variable(t, name) -> (name, t)
+		| Variable_Initialization(t, name, expr) -> if t <> check_expr expr then raise Failure "wrong type" else (name, t) 
+		| Array_Initialization(t, name, el) ->
+			try 
+				_ = List.find( fun elem -> t <> check_expr elem) in raise Failure "wrong type"
+			with Not_found ->
+				(name, t) (* FLAG TO SEE IF ARRAY PLEASE *)
+		| Struct_Initialization(t, name, el) ->
+			Struct(id) -> 
+				try
+					let s = find_struct scope id in
+					
+				with
+				| _ -> failwith "Unknown"
+			| _ -> raise Failure "Not a struct"
+
+
+	in { scope with variables = scope.variables :: tuple }
 
 let process_func_decl (env : translation_environment) f =
+	try
+		let _ = find_func env.scope.functions f in
+			raise Failure ("Function already declared with name " ^ f.fname)
+	with Not_found ->
+		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
+		let scope' = List.fold_left process_var_decl scope' f.locals::f.formals in
+		let scope' = List.fold_left check_statement scope' f.body in
+		let scope' = { env.scope with functions = env.scope.functions :: f } in
+		{ env with scope = scope' }
+
+let check_struct (scope : symbol_table) s =
+	S_Variable_Decl -> 
+let process_struct_decl (env : translation_environment) s =
+	try
+		let _ = find_func env.scope.structs s in
+			raise Failure ("struct already declared with name " ^ s.sname)
+	with Not_found ->
+		let scope' = List.fold_left check_struct scope s.sbody in
+		let scope' = { env.scope with functions = env.scope.functions :: f } in
+		{ env with scope = scope' }
+
+let process_global_decl (env : translation_environment) g =
 	try
 		let _ = find_func env.scope.functions f in
 			raise Failure ("Function already declared with name " ^ f.fname)
@@ -213,11 +259,11 @@ let check_program p =
 	let s = { parent = None; variables = []; functions = []; structs = [] } in
 	let env = { scope = s } in
 	let (structs, vars, funcs) = p in 	
-	let env' = List.iter process_structs env structs in
-	let env' = List.iter process_globals env vars in
+	let env' = List.iter process_struct_decl env structs in
+	let env' = List.iter process_global_decl env vars in
 	let env' = List.iter process_func_decl (List.rev funcs) in
 	try
-		List.find( fun (_, f, _, _) -> f = main ) env.scope.functions
+		List.find( fun (_, f, _, _) -> f == "main" ) env.scope.functions
 	with Not_found ->
 		raise Failure "No main function defined."
 
