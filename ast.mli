@@ -34,8 +34,8 @@ type var_types =
 type var_decl =
 	Variable of var_types * string
 	| Variable_Initialization of var_types * string * expr
-	| Array_Initialization of var_types * string * stmt
-	| Struct_Initialization of string * string * stmt
+	| Array_Initialization of var_types * string * expr list
+	| Struct_Initialization of var_types * string * expr list
 
 type struct_body = 
 	| S_Variable_Decl of var_decl (* int foo *)

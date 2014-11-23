@@ -29,8 +29,8 @@
 
 program:
 	/* nothing */ 	{ [], [], [] }
-	| program vdecl { let (str, var, func) = $1 in str, $2::var, func } /* int world = 4; */
 	| program sdecl { let (str, var, func) = $1 in $2::str, var, func }
+	| program vdecl { let (str, var, func) = $1 in str, $2::var, func } /* int world = 4; */
 	| program fdecl { let (str, var, func) = $1 in str, var, $2::func }
 	
 fdecl:
@@ -54,10 +54,14 @@ vdecl_list:
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	the_type ID LBRACK RBRACK ASSIGN block SEMI { Array_Initialization($1, $2, $6) }
+	the_type ID LBRACK RBRACK ASSIGN LBRACE expr_list RBRACE SEMI { Array_Initialization($1, $2, List.rev $7) }
 	| the_type ID SEMI { Variable($1, $2) }
 	| the_type ID ASSIGN expr SEMI { Variable_Initialization($1, $2, $4) }
-	| the_type ID ASSIGN block SEMI { Struct_Initialization($2, $3, $5) }
+	| the_type ID ASSIGN LBRACE expr_list RBRACE SEMI { Struct_Initialization($1, $2, List.rev $5) }
+
+expr_list:
+	expr { [$1] }
+	| expr_list SEMI expr { $3 :: $1 }
 
 sdecl:
 	STRUCT ID LBRACE struct_body RBRACE
