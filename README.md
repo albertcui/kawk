@@ -1,4 +1,4 @@
-The kAWK Language (formerly: GAWK)
+The kAWK Language "kay-awk" (formerly: GAWK)
 -----------------
 
 ## Team members: 
