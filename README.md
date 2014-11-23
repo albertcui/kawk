@@ -2,17 +2,20 @@ The kAWK Language (formerly: GAWK)
 -----------------
 
 Team members: 
-Albert Cui (Language Guru)\n
-Karen Nan (Project Manager)\n
-Michael Raimi (System Architect)\n
-Mei-Vern Then (Testing and Validation)\n
+Albert Cui (Language Guru)
 
-To build:\n
-make clean\n
+Karen Nan (Project Manager)
+
+Michael Raimi (System Architect)
+
+Mei-Vern Then (Testing and Validation)
+
+To build:
+make clean
 make\n
 
-Pretty printer:\n
-./pretty testprogram.k\n
+Pretty printer:
+./pretty testprogram.k
 
 Test Suite (in test program): 
 ./test_suite.sh
