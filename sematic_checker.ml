@@ -7,14 +7,15 @@ type function_table = {
 }
 
 type translation_environment = {
-	scope : symbol_table; (* symbol table for vars *)
-	return_type : var_types (* Function’s return type *)
+	scope : symbol_table (* symbol table for vars *)
+	(* return_type : var_types Function’s return type *)
 }
 
 type symbol_table = {
 	parent : symbol_table option;
 	variables : string * var_types list;
-	functions : func_decl list
+	functions : func_decl list;
+	structs : struct_decl list
 }
 
 (* 
@@ -86,93 +87,6 @@ let rec stmt env =
 		List.rev scope'.variables; (* side-effect *)
 		Sast.Block(scope', sl) (* Success: return block with symbols *)
 *)
-
-let print_op = function
-	Add -> print_string "+ "
-	| Sub -> print_string "- "
-	| Mult -> print_string "* "
-	| Div -> print_string "/ "
-	| Mod -> print_string "% "
-	| Equal -> print_string "= "
-	| Neq -> print_string "!= "
-	| Less -> print_string "< " 
-	| Leq -> print_string "<= "
-	| Greater -> print_string "> "
-	| Geq -> print_string ">= "
-	| Or -> print_string "| "
-	| And -> print_string "& "
-	| Not -> print_string "! " 
-
-let rec print_expr = function
-	Noexpr -> print_string ""
-	| This -> print_string "this "
-	| Null -> print_string "null "
-	| Id(id) -> Printf.printf "%s " id
-	| Integer_literal(i) -> Printf.printf "%d " i 
-	| String_literal(str) -> Printf.printf "%S " str
-	| Boolean_literal(b) -> Printf.printf "%B " b
-	| Array_access(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]"
-	| Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr
-	| Uniop(op, expr) -> print_op op; print_expr expr
-	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2
-	| Call(str, expr_list) -> Printf.printf "%s(" str; List.iter print_expr expr_list; print_string ") "
-	| Access(str1, str2) -> Printf.printf "%s.%s " str1 str2 
-
-let print_expr_semi e = 
-	print_expr e; print_string ";\n"
-
-let rec print_expr_list = function
-	[] -> print_string ""
-	| hd::[] -> print_expr hd
-	| hd::tl -> print_expr hd; print_string "; "; print_expr_list tl 
-
-
-let rec print_stmt = function
-	Block(stmt_list) -> print_string "{"; List.iter print_stmt stmt_list; print_string "}\n"
-	| Expr(expr) -> print_expr_semi expr
-	| Return(expr) -> print_string "return "; print_expr_semi expr
-	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr_semi expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
-	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr_semi expr1; print_string ";"; print_expr_semi expr2; print_string ";"; print_expr expr3; print_stmt stmt 
-	| While(expr, stmt) -> print_string "while ("; print_expr_semi expr; print_string ")"; print_stmt stmt
-
-let rec print_var_types = function
-	Void -> print_string "void "
-	| Int -> print_string "int "
-	| String -> print_string "str " 
-	| Boolean -> print_string "bool "
-	| Struct(str) -> Printf.printf "struct %s " str 
-	| Array(var_types, expr) -> print_var_types var_types; print_string "["; print_expr_semi expr; print_string "] "
-
-let rec print_var_decl = function
-	Variable(var_types, str) -> print_var_types var_types; print_string (str ^ ";\n")
-	| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf "%s = " str; print_expr_semi expr
-	| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s[] = { " str; print_expr_list expr_list; print_string "};\n"
-	| Struct_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s = { " str; List.iter print_expr expr_list; print_string "};\n"
-
-
-let print_struct_body = function
-	S_Variable_Decl(var_decl) -> print_var_decl var_decl
-	| Assert(expr, stmt_list) -> print_string "@("; print_expr expr; print_string ") "; List.iter print_stmt stmt_list
-
-let print_struct_decl s =
-	print_string "struct ";
-	print_string s.sname; 
-	print_string " {\n";
-	List.iter print_struct_body s.sbody;
-	print_string "}"
-
-let find_func (l : func_decl list) f =
-	List.find(fun c -> c.fname = f.fname) l
-
-let proc_func_decl (env : translation_environment) f =
-	try
-		let _ = find_func env.scope.functions f in
-			raise Failure ("Function already declared with name " ^ f.fname)
-	with Not_found ->
-		let scope' = { env.scope with parent = Some(env.scope); variables = f.locals::f.formals } in
-		let scope' = List.fold_left check_statement scope' f.body in
-		let scope' = { env.scope with functions = env.scope.functions :: f } in
-		{ env with scope = scope' }
 
 let rec check_stmt (scope : symbol_table) stmt = match stmt with
 	Block(sl) -> List.fold_left check_statement scope sl
@@ -248,6 +162,28 @@ let check_array_access (scope : symbol_table) a =
 	let t = check_id scope id in
 	if e1 <> Int then raise Failure "Array access must be integer." else t
 
+let check_assign (scope : symbol_table) a =
+	let (id, expr) = a in
+	let e1 = check_expr scope expr in
+	let t = check_id scope id in
+	if e1 <> t then raise Failure "Incorrect type assignment." else t
+
+let check_call (scope : symbol_table) c =
+	let (id, el) = c in
+	let f = find_func scope.functions id in
+	(* let l1 = List.length f.formals and l2 = List.length el in
+	if l1 <> l2 
+	then raise Failure ("Function " ^ id ^ " expects " ^ (int_to_string l1) ^ " parameters and " (int_to_string l2) " provided.") *)
+	List.iter2 (
+		fun a b -> match a with
+		(t, _ ) -> if t <> check_expr b then raise Failure "wrong type" else t
+		| (t, _, _)  -> if t <> check_expr b then raise Failure "wrong type" else t) f.formals el;
+	f.ftype 	
+
+let check_access (scope : symbol_table) a =
+	let (id, id) = a in
+
+
 let check_uni_op (scope : symbol_table) uniop =
 	let (op, exp) = uniop in
 	let e = check_expr scope e in
@@ -260,11 +196,30 @@ let process_func_formals (env : translation_environment) f =
 	let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
 	let scope' = List.iter (fun var -> scope.variables:: head) *)
 
-let print_program p = 
+let find_func (l : func_decl list) f =
+	List.find(fun c -> c.fname = f.fname) l
+
+let process_func_decl (env : translation_environment) f =
+	try
+		let _ = find_func env.scope.functions f in
+			raise Failure ("Function already declared with name " ^ f.fname)
+	with Not_found ->
+		let scope' = { env.scope with parent = Some(env.scope); variables = f.locals::f.formals } in
+		let scope' = List.fold_left check_statement scope' f.body in
+		let scope' = { env.scope with functions = env.scope.functions :: f } in
+		{ env with scope = scope' }
+
+let check_program p =
+	let s = { parent = None; variables = []; functions = []; structs = [] } in
+	let env = { scope = s } in
 	let (structs, vars, funcs) = p in 	
-		List.iter print_struct_decl structs;
-		List.iter print_var_decl vars;
-		List.iter print_func_decl (List.rev funcs)
+	let env' = List.iter process_structs env structs in
+	let env' = List.iter process_globals env vars in
+	let env' = List.iter process_func_decl (List.rev funcs) in
+	try
+		List.find( fun (_, f, _, _) -> f = main ) env.scope.functions
+	with Not_found ->
+		raise Failure "No main function defined."
 
 let print_position outx lexbuf =
   let pos = lexbuf.lex_curr_p in
@@ -276,4 +231,4 @@ let _ =
 	let program = try
 	Parser.program Scanner.token lexbuf 
 	with _ -> Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; exit (-1) in
-	print_program program
+	check_program program
