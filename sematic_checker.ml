@@ -1,16 +1,23 @@
 open Ast
 open Lexing
+open Map
+
+type function_table = {
+	funcs : func_decl list
+}
 
 type translation_environment = {
 	scope : symbol_table; (* symbol table for vars *)
-	return_type : Types.t (* Function’s return type *)
+	return_type : var_types (* Function’s return type *)
 }
 
 type symbol_table = {
 	parent : symbol_table option;
-	variables : variable_decl list
+	variables : string * var_types list;
+	functions : func_decl list
 }
 
+(* 
 let rec find_variable (scope : symbol_table) name =
 	try
 		List.find (fun (s, _, _, _) -> s = name) scope.variables
@@ -19,6 +26,10 @@ let rec find_variable (scope : symbol_table) name =
 		Some(parent) -> find_variable parent name
 		| _ -> raise Not_found
 
+let rec find_func (funcs : function_table) name = 
+	try
+		List.find  *)
+(*
 let rec expr env = 
 	(* An integer constant: convert and return Int type *)
 	Ast.IntConst(v) -> Sast.IntConst(v), Types.Ints
@@ -31,7 +42,7 @@ let rec expr env =
 		in
 		let (_, typ) = vdecl in (* get the variable’s type *)
 		Sast.Id(vdecl), typ
-	| A.Binop(e1, op, e2) ->
+	| Ast.Binop(e1, op, e2) ->
 		let e1 = expr env e1 and e2 = expr env e2 in (* Check left and right children *)
 		let _, t1 = e1 (* Get the type of each child *)
 		and _, t2 = e2 in
@@ -57,29 +68,25 @@ let rec stmt env =
 		require_integer e "Predicate of if must be integer";
 		Sast.If(e, stmt env s1, stmt env s2) (* Check then, else *)
 	(* let rec stmt env = function *)
-	| A.Local(vdecl) ->
+	| Ast.Local(vdecl) ->
 		let decl, (init, _) = check_local vdecl (* already declared? *)
 		in
 		(* side-effect: add variable to the environment *)
-		env.scope.S.variables <- decl :: env.scope.S.variables;
+		env.scope.variables <- decl :: env.scope.variables;
 		init (* initialization statements, if any *)
 	(* let rec stmt env = function *)
-	| A.Block(sl) ->
-	(* New scopes: parent is the existing scope, start out empty *)
-	let scope' = { S.parent = Some(env.scope); S.variables = [] }
-	and exceptions' =
-	{ excep_parent = Some(env.exception_scope); exceptions = [] }
-	in
-	(* New environment: same, but with new symbol tables *)
-	let env' = { env with scope = scope';
-	exception_scope = exceptions' } in
-	(* Check all the statements in the block *)
-	let sl = List.map (fun s -> stmt env' s) sl in
-	scope'.S.variables <-
-	List.rev scope'.S.variables; (* side-effect *)
-	Sast.Block(scope', sl) (* Success: return block with symbols *)
+	| Ast.Block(sl) ->
+		(* New scopes: parent is the existing scope, start out empty *)
+		let scope' = { parent = Some(env.scope); variables = [] } in
+		(* New environment: same, but with new symbol tables *)
+		let env' = { env with scope = scope' } in
+		(* Check all the statements in the block *)
+		let sl = List.map (fun s -> stmt env' s) sl in
+		scope'.variables <-
+		List.rev scope'.variables; (* side-effect *)
+		Sast.Block(scope', sl) (* Success: return block with symbols *)
+*)
 
-(*
 let print_op = function
 	Add -> print_string "+ "
 	| Sub -> print_string "- "
@@ -154,15 +161,75 @@ let print_struct_decl s =
 	List.iter print_struct_body s.sbody;
 	print_string "}"
 
-let print_func_decl f =
-	print_var_types f.ftype;
-	print_string f.fname; 
-	print_string "(";
-	List.iter print_var_decl f.formals; 
-	print_string ") {\n";
-	List.iter print_var_decl f.locals; 
-	List.iter print_stmt f.body;
-	print_string "}\n"
+let find_func (l : func_decl list) f =
+	List.find(fun c -> c.fname = f.fname) l
+
+let proc_func_decl (env : translation_environment) f =
+	try
+		let _ = find_func env.scope.functions f in
+			raise Failure ("Function already declared with name " ^ f.fname)
+	with Not_found ->
+		let scope' = { env.scope with parent = Some(env.scope); variables = f.locals::f.formals } in
+		let scope' = List.fold_left check_statement scope' f.body in
+		let scope' = { env.scope with functions = env.scope.functions :: f } in
+		{ env with scope = scope' }
+
+let rec check_stmt (scope : symbol_table) stmt = match stmt with
+	Block(sl) -> List.fold_left check_statement scope sl
+	| Expr(e) -> check_expr scope e
+	| Return(e) -> check_expr scope e
+	| If(expr, stmt1, stmt2) -> 
+		let scope' = check_expr scope expr in
+		let scope' = check_stmt scope' stmt1 in
+		check_stmt scope' stmt2
+	| For(expr1, expr2, expr3, stmt) ->
+		let scope' = check_expr scope expr1 in
+		let scope' = check_expr scope' expr2 in
+		let scope' = check_expr scope' expr3 in
+		check_stmt scope' stmt 
+	| While(expr, stmt) ->
+		let scope' = check_expr scope expr in
+		check_stmt scope' stmt
+
+let rec check_expr (scope : symbol_table) expr = match expr with
+	Noexpr
+	| This -> void
+	| Null -> void
+	| Id(str) -> check_id scope str
+	| Integer_literal(i) -> Int
+	| String_literal(str) -> String
+	| Boolean_literal(b) -> Boolean
+	| Array_access(str, expr) -> 
+		let scope' = check_id scope str in
+		check_expr scope' expr
+	| Assign(str, expr) ->
+		let scope' = check_id scope str in
+		check_expr scope' expr
+	| Uniop(op, expr) ->
+		let scope' = check_op scope op in 
+		check_expr scope' expr
+	| Binop(expr1, op, expr2) ->
+		let scope' = check_expr scope expr1 in
+		let scope' = check_op scope' op in
+		check_expr scope' expr2
+	| Call(str, el) ->
+		let scope' = check_id scope str in
+		List.fold_left check_expr scope' el
+	| Access(str1, str2) ->
+		let scope' = check_id scope str1 in
+		check_id scope' str2
+
+let rec check_id (scope : symbol_table) id =
+	try
+		List.find(fun (name, _ ) -> name = id) scope.variables
+	with Not_found -> match scope.parent with
+		Some(parent) -> check_id scope.parent id
+		| _ -> raise Not_found 
+
+
+let process_func_formals (env : translation_environment) f =
+	let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
+	let scope' = List.iter (fun var -> scope.variables:: head)
 
 let print_program p = 
 	let (structs, vars, funcs) = p in 	
@@ -174,8 +241,6 @@ let print_position outx lexbuf =
   let pos = lexbuf.lex_curr_p in
   Printf.fprintf outx "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
-
-*)
 
 let _ =
 	let lexbuf = Lexing.from_channel stdin in
