@@ -16,4 +16,5 @@ pretty:
 .PHONEY: clean
 
 clean: 
+	rm -f test/output*.k
 	rm -f pretty *.cmo *.cmi *~ parser.mli parser.ml scanner.ml
