@@ -199,37 +199,66 @@ let rec check_expr (scope : symbol_table) expr = match expr with
 	| Integer_literal(i) -> Int
 	| String_literal(str) -> String
 	| Boolean_literal(b) -> Boolean
-	| Array_access(str, expr) -> 
-		let scope' = check_id scope str in
-		check_expr scope' expr
-	| Assign(str, expr) ->
-		let scope' = check_id scope str in
-		check_expr scope' expr
+	| Array_access as a ->
+		check_array_access scope a
+	| Assign as a ->
+		check_assign scope a
 	| Uniop(op, expr) ->
-		let scope' = check_op scope op in 
-		check_expr scope' expr
-	| Binop(expr1, op, expr2) ->
-		let scope' = check_expr scope expr1 in
-		let scope' = check_op scope' op in
-		check_expr scope' expr2
-	| Call(str, el) ->
-		let scope' = check_id scope str in
-		List.fold_left check_expr scope' el
-	| Access(str1, str2) ->
-		let scope' = check_id scope str1 in
-		check_id scope' str2
+		check_uni_op scope op
+	| Binop as b ->
+		check_op scope b
+	| Call as c ->
+		check_call scope c
+	| Access as a ->
+		check_access scope a
 
 let rec check_id (scope : symbol_table) id =
 	try
-		List.find(fun (name, _ ) -> name = id) scope.variables
+		let (_, t) = List.find(fun (name, _ ) -> name = id) scope.variables in t
 	with Not_found -> match scope.parent with
 		Some(parent) -> check_id scope.parent id
-		| _ -> raise Not_found 
+		| _ -> raise Not_found
+ 
+let check_op (scope : symbol_table) binop = 
+	let (xp1, op, xp1) = binop in
+	let e1 = check_expr scope xp1 and e2 = chekc_expr scope xp2 in
+	match op with
+	Add ->
+		if (e1 <> Int || e2 <> Int) then
+			if (e1 <> String || e2 <> String) then raise Failure "Incorrect types for + "
+			else String
+		else Int
+	| Sub -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for - " else Int
+	| Mult -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for * " else Int
+	| Div -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for / " else Int
+	| Mod -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for % " else Int
+	| Equal -> if (e1 <> e2) then raise Failure "Incorrect types for = " else Boolean
+	| Neq -> if (e1 <> e2) then raise Failure "Incorrect types for != " else Boolean
+	| Less -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for < " else Int
+	| Leq -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for <= " else Int
+	| Greater -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for > " else Int
+	| Geq -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for >= " else Int
+	| Or -> if (e1 <> Boolean || e2 <> Boolean) then raise Failure "Incorrect types for | " else Boolean
+	| And -> if (e1 <> Boolean || e2 <> Boolean) then raise Failure "Incorrect types for & " else Boolean
+	| Not -> raise Failure "! is a unary operator."
 
+let check_array_access (scope : symbol_table) a =
+	let (id, expr) = a in
+	let e1 = check_expr scope expr in
+	let t = check_id scope id in
+	if e1 <> Int then raise Failure "Array access must be integer." else t
 
+let check_uni_op (scope : symbol_table) uniop =
+	let (op, exp) = uniop in
+	let e = check_expr scope e in
+	match op with
+	Not -> if (e <> Boolean) then raise Failure "Incorrect types for ! " else Boolean
+	| _ -> raise Failure (e ^ " is not a unary operator")
+
+(* 
 let process_func_formals (env : translation_environment) f =
 	let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
-	let scope' = List.iter (fun var -> scope.variables:: head)
+	let scope' = List.iter (fun var -> scope.variables:: head) *)
 
 let print_program p = 
 	let (structs, vars, funcs) = p in 	
