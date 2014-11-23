@@ -12,7 +12,7 @@ Mei-Vern Then (Testing and Validation)
 
 To build:
 make clean
-make\n
+make
 
 Pretty printer:
 ./pretty testprogram.k
