@@ -1,8 +1,8 @@
 %{ open Ast %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PLUS MINUS TIMES DIVIDE MOD
+%token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PLUS MINUS TIMES DIVIDE MOD
 %token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL STRING INT EOF OR AND NOT
-%token ACCESS STRUCT ASSERT UNIT THIS NULL VOID
+%token ACCESS STRUCT ASSERT UNIT THIS NULL VOID EQUALS
 %token <string> ID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL
@@ -34,12 +34,13 @@ program:
 	| program fdecl { let (str, var, func) = $1 in str, var, $2::func }
 	
 fdecl:
-	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list udecl_list RBRACE
 	{ { ftype   = $1;
 		fname   = $2;
 		formals = $4;
 		locals  = List.rev $7;
-		body    = List.rev $8 } }
+		body    = List.rev $8;
+		unit_t 	= List.rev $9; } }
 
 formals_opt:
 	/* nothing */		{ [] }
@@ -59,6 +60,17 @@ vdecl:
 	| the_type ID ASSIGN expr SEMI { Variable_Initialization($1, $2, $4) }
 	| the_type ID ASSIGN LBRACE expr_list RBRACE SEMI { Struct_Initialization($1, $2, List.rev $5) }
 
+udecl_list:
+	/* nothing */		{ [] }
+	| unit_list udecl 	{ $2 :: $1 }
+
+udecl:
+	UNIT LPAREN uparam_list RPAREN COLON EQUALS LPAREN expr RPAREN
+
+uparam_list:
+	/* nothing */{ [] }
+	| uparam_list COMMA expr { $3 :: $1 }
+
 assert_list:
 	/* nothing */ { [] }
 	| assert_list asrt { $2 :: $1 }
@@ -69,6 +81,7 @@ asrt:
 expr_list:
 	expr { [$1] }
 	| expr_list SEMI expr { $3 :: $1 }
+	/*| expr_list COMMA expr { $3 :: $1 } will this work for udecl? */
 
 sdecl:
 	STRUCT ID LBRACE vdecl_list assert_list RBRACE
