@@ -68,11 +68,13 @@ let print_struct_body = function
 	S_Variable_Decl(var_decl) -> print_var_decl var_decl
 	| Assert(expr, stmt_list) -> print_string "@("; print_expr expr; print_string ") "; List.iter print_stmt stmt_list
 
+(* FIX THIS *)
 let print_struct_decl s =
 	print_string "struct ";
 	print_string s.sname; 
 	print_string " {\n";
-	List.iter print_struct_body s.sbody;
+	List.iter print_var_decl s.variable_decls;
+	List.iter print_ass
 	print_string "}"
 
 let print_func_decl f =
