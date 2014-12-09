@@ -64,9 +64,9 @@ let rec print_var_decl = function
 	| Struct_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s = { " str; List.iter print_expr expr_list; print_string "};\n"
 
 
-let print_struct_body = function
-	S_Variable_Decl(var_decl) -> print_var_decl var_decl
-	| Assert(expr, stmt_list) -> print_string "@("; print_expr expr; print_string ") "; List.iter print_stmt stmt_list
+let print_asserts a =
+	let (expr, stmt_list) = a in
+	print_string "@("; print_expr expr; print_string ") "; List.iter print_stmt stmt_list
 
 (* FIX THIS *)
 let print_struct_decl s =
@@ -74,7 +74,7 @@ let print_struct_decl s =
 	print_string s.sname; 
 	print_string " {\n";
 	List.iter print_var_decl s.variable_decls;
-	List.iter print_ass
+	List.iter print_asserts s.asserts;
 	print_string "}"
 
 let print_func_decl f =
