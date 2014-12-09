@@ -59,20 +59,22 @@ vdecl:
 	| the_type ID ASSIGN expr SEMI { Variable_Initialization($1, $2, $4) }
 	| the_type ID ASSIGN LBRACE expr_list RBRACE SEMI { Struct_Initialization($1, $2, List.rev $5) }
 
+assert_list:
+	/* nothing */ { [] }
+	| assert_list asrt { $2 :: $1 }
+
+asrt:
+	ASSERT LPAREN expr RPAREN stmt_list { $3, List.rev $5 }
+
 expr_list:
 	expr { [$1] }
 	| expr_list SEMI expr { $3 :: $1 }
 
 sdecl:
-	STRUCT ID LBRACE struct_body RBRACE
+	STRUCT ID LBRACE vdecl_list assert_list RBRACE
 	{ { sname = $2;
-		sbody = List.rev $4 } }
-
-struct_body:
-	vdecl { [S_Variable_Decl($1)] }
-	| ASSERT LPAREN expr RPAREN stmt_list { [Assert($3, $5)] }
-	| struct_body vdecl { S_Variable_Decl($2) :: $1 }
-	| struct_body ASSERT LPAREN expr RPAREN stmt_list { Assert($4, $6) :: $1 }
+		variable_decls = List.rev $4;
+		asserts = List.rev $5; } }
 
 the_type:
 	INT { Int }
