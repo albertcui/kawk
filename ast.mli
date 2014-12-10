@@ -43,6 +43,9 @@ type struct_decl = {
 	asserts: (expr * stmt list) list; (* @ (bar > 1) { ... } *)
 }
 
+type unit_decl =
+	Unit_Initialization of expr list * expr;
+
 type func_decl = {
 	ftype: var_types;
 	fname : string; (* Name of the function *)
