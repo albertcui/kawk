@@ -9,7 +9,7 @@ rule token = parse
   | ';' { SEMI }    | ',' { COMMA }
   | '+' { PLUS }    | '-' { MINUS }
   | '*' { TIMES }   | '/' { DIVIDE }
-  | '%' { MOD }
+  | '%' { MOD }     | ':' { COLON }
   | '=' { ASSIGN } 
   | '<' { LT }      | '>' { GT }
   | "==" { EQ }     | "!=" { NEQ } 
@@ -17,7 +17,7 @@ rule token = parse
   | '!' { NOT }
   | '|' { OR }      | '&' { AND } (* Short circuits *)
   | "accept" { ACCEPT } | "reject" { REJECT } (*test functions*)
-  | "@" { ASSERT }  | '.' { ACCESS }
+  | "@" { ASSERT }  | "unit" { UNIT } | '.' { ACCESS }
   | "else" { ELSE } | "if" { IF } (* Keywords *)
   | "while" { WHILE } | "for" { FOR }
   | "return" { RETURN }
@@ -25,6 +25,7 @@ rule token = parse
   | "void" { VOID }
   | "this" { THIS } | "null" { NULL }
   | "bool" { BOOL } | "int" { INT } | "str" { STRING } 
+  | "equals" { EQUALS }
   | '"'('\\'_ |[^'"'])*'"' as str { STRING_LITERAL(str) }  (* Strings *)
   | ['0'-'9']+ as lxm { INT_LITERAL(int_of_string lxm) } (* Integers *)
   | "true" | "false" as boolean { BOOL_LITERAL(bool_of_string boolean) }
