@@ -41,7 +41,7 @@ fdecl:
 		formals = $4;
 		locals  = List.rev $7;
 		body    = List.rev $8;
-		unit_t 	= List.rev $9; } }
+		units 	= List.rev $9; } }
 
 formals_opt:
 	/* nothing */		{ [] }
@@ -66,10 +66,12 @@ vdecl:
 
 udecl_list:
 	/* nothing */		{ [] }
-	| unit_list udecl 	{ $2 :: $1 }
+	| udecl_list udecl 	{ $2 :: $1 }
 
 udecl:
-	UNIT LPAREN uparam_list RPAREN COLON EQUALS LPAREN expr RPAREN SEMI { Unit_Initialization( List.rev $3, $8)}
+	UNIT LPAREN uparam_list RPAREN COLON EQUALS LPAREN expr RPAREN SEMI 
+	{ { u_param_list = $3;
+		check_val = $8; } }
 
 uparam_list:
 	/* nothing */		{ [] }
