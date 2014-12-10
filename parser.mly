@@ -69,13 +69,9 @@ udecl_list:
 	| udecl_list udecl 	{ $2 :: $1 }
 
 udecl:
-	UNIT LPAREN uparam_list RPAREN COLON EQUALS LPAREN expr RPAREN SEMI 
+	UNIT LPAREN actuals_list RPAREN COLON EQUALS LPAREN expr RPAREN SEMI 
 	{ { u_param_list = $3;
 		check_val = $8; } }
-
-uparam_list:
-	/* nothing */		{ [] }
-	| uparam_list COMMA expr { $3 :: $1 }
 
 /* ------------- end udecl stuff --------------*/
 

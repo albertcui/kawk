@@ -43,8 +43,10 @@ type struct_decl = {
 	asserts: (expr * stmt list) list; (* @ (bar > 1) { ... } *)
 }
 
-type unit_decl =
-	Unit_Initialization of expr list * expr;
+type unit_decl = {
+		u_param_list: expr list;
+		check_val: expr;
+}
 
 type func_decl = {
 	ftype: var_types;
@@ -52,7 +54,7 @@ type func_decl = {
 	formals : var_decl list; (* Formal argument names *)
 	locals : var_decl list; (* Locally defined variables *)
 	body : stmt list;
-	udecl_list : unit_decl list; (* Series of unit tests *)
+	units : unit_decl list; (* Series of unit tests *)
 }
 
 type program = struct_decl list * var_decl list * func_decl list (* global vars, funcs *)

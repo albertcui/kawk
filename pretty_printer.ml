@@ -77,6 +77,13 @@ let print_struct_decl s =
 	List.iter print_asserts s.asserts;
 	print_string "}"
 
+let print_unit_decl u = 
+	print_string "unit(";
+	print_expr_list u.u_param_list;
+	print_string ") : (";
+	print_expr u.check_val;
+	print_string ");\n"
+
 let print_func_decl f =
 	print_var_types f.ftype;
 	print_string f.fname; 
@@ -85,15 +92,8 @@ let print_func_decl f =
 	print_string ") {\n";
 	List.iter print_var_decl f.locals; 
 	List.iter print_stmt f.body;
-	List.iter print_unit_decl f.units
+	List.iter print_unit_decl f.units;
 	print_string "}\n"
-
-let print_unit_decl u = 
-	print_string "unit(";
-	List.iter print_uparam_list u.u_param_list;
-	print_string ") : (";
-	print_expr u.check_val;
-	print_string ");\n"
 
 let print_program p = 
 	let (structs, vars, funcs) = p in 	
