@@ -52,7 +52,7 @@ type func_decl = {
 	formals : var_decl list; (* Formal argument names *)
 	locals : var_decl list; (* Locally defined variables *)
 	body : stmt list;
-	unit_t : unit_decl list; (* Series of unit tests *)
+	udecl_list : unit_decl list; (* Series of unit tests *)
 }
 
 type program = struct_decl list * var_decl list * func_decl list (* global vars, funcs *)
