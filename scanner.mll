@@ -16,6 +16,7 @@ rule token = parse
   | "<=" { LEQ }    | ">=" { GEQ }
   | '!' { NOT }
   | '|' { OR }      | '&' { AND } (* Short circuits *)
+  | "accept" { ACCEPT } | "reject" { REJECT } (*test functions*)
   | "@" { ASSERT }  | '.' { ACCESS }
   | "else" { ELSE } | "if" { IF } (* Keywords *)
   | "while" { WHILE } | "for" { FOR }
