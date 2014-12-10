@@ -234,25 +234,30 @@ let process_func_decl (env : translation_environment) f =
 		let scope' = { env.scope with functions = env.scope.functions :: f } in
 		{ env with scope = scope' }
 
+let process_assert (scope: symbol_table) a =
+	let (expr, stml) = a in
+	if check_expr expr <> Boolean then raise Failure "assert expr must be boolean " else
+	List.fold_left check_stmt stml
+
+
 let check_struct (scope : symbol_table) s =
-	S_Variable_Decl ->
+	let scope' = List.fold_left process_var_decl scope s.variable_decls in
+	List.fold_left process_assert scope' s.asserts
 
 let process_struct_decl (env : translation_environment) s =
 	try
-		let _ = find_func env.scope.structs s in
+		let _ = find_struct env.scope.structs s in
 			raise Failure ("struct already declared with name " ^ s.sname)
 	with Not_found ->
-		let scope' = List.fold_left check_struct scope s.sbody in
-		let scope' = { env.scope with functions = env.scope.functions :: f } in
+		List.fold_left check_struct scope s in (* Throw away scope of the struct *)
+		let scope' = { env.scope with structs = env.scope.structs :: s } in
 		{ env with scope = scope' }
-
-
 
 (* TO DO FIX THIS*)
 let process_global_decl (env : translation_environment) g =
 	try
 		let _ = find_id env.scope.variables g in
-			raise Failure ("Variable already declared with name " ^ f.fname)
+			raise Failure ("Variable already declared with name " ^ g.fname)
 	with Not_found ->
 		let scope' = { env.scope with parent = Some(env.scope); variables = f.locals::f.formals } in
 		let scope' = List.fold_left check_statement scope' f.body in
