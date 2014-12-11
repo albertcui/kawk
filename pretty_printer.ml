@@ -68,7 +68,7 @@ let rec print_var_types = function
 	| String -> print_string "str " 
 	| Boolean -> print_string "bool "
 	| Struct(str) -> Printf.printf "struct %s " str 
-	| Array(var_types, expr) -> print_var_types var_types; print_string "["; print_expr_semi expr; print_string "] "
+	| Array(var_types, expr) -> print_var_types var_types; print_string "["; print_expr expr; print_string "] "
 
 let rec print_var_decl = function
 	Variable(var_types, str) -> print_var_types var_types; print_string (str ^ ";\n")
