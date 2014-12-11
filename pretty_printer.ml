@@ -90,7 +90,7 @@ let print_param = function
 let rec print_param_list = function
 	[] -> print_string "";
 	| hd::[] -> print_param hd;
-	| hd::tl -> print_param hd; print_string " ,"; print_param_list tl
+	| hd::tl -> print_param hd; print_string ", "; print_param_list tl
 
 let print_func_decl f =
 	print_var_types f.ftype;
