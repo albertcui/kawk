@@ -1,4 +1,3 @@
-
 struct potato { 
 int size; 
 int potat; 

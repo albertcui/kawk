@@ -73,7 +73,7 @@ let rec print_var_types = function
 let rec print_var_decl = function
 	Variable(var_types, str) -> print_var_types var_types; print_string (str ^ ";\n")
 	| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf "%s = " str; print_expr_semi expr
-	| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s[] = { " str; print_expr_list expr_list; print_string "};\n"
+	| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "[]%s = { " str; print_expr_list_comma expr_list; print_string "};\n"
 	| Struct_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s = { " str; List.iter print_expr expr_list; print_string "};\n"
 
 
