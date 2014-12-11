@@ -187,7 +187,7 @@ let check_call (scope : symbol_table) c =
 	f.ftype 	
 
 let check_access (scope : symbol_table) a =
-	let (id, id) = a in
+	let (id, id) = a in 
 
 
 let check_uni_op (scope : symbol_table) uniop =
@@ -257,10 +257,14 @@ let process_struct_decl (env : translation_environment) s =
 let process_global_decl (env : translation_environment) g =
 	try
 		let _ = find_id env.scope.variables g in
-			raise Failure ("Variable already declared with name " ^ g.fname)
+			let name = match g with
+				Variable(_, id) -> id
+				| Variable_Initialization(_, id, _) -> id
+				| Array_Initialization(_, id, _) -> id
+				| Struct_Initialization(_, id, _) -> id
+			in raise Failure ("Variable already declared with name " ^ name)
 	with Not_found ->
-		let scope' = { env.scope with parent = Some(env.scope); variables = f.locals::f.formals } in
-		let scope' = List.fold_left check_statement scope' f.body in
+		let scope' = { env.scope with parent = Some(env.scope); variables = env.scope.variables::g } in
 		let scope' = { env.scope with functions = env.scope.functions :: f } in
 		{ env with scope = scope' }
 
