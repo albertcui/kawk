@@ -13,13 +13,13 @@ type translation_environment = {
 
 type symbol_table = {
 	parent : symbol_table option;
-	variables : string * var_types list;
+	variables : string * variable_decl * var_types list;
 	functions : func_decl list;
 	structs : struct_decl list
 }
 
-let find_struct (s : struct_decl list) s =
-	List.find(fun c -> c.sname = s.sname) s
+let find_struct (s : struct_decl list) stru =
+	List.find(fun c -> c.sname = stru.sname) s
 
 
 let find_func (l : func_decl list) f =
@@ -116,11 +116,12 @@ let rec check_expr (scope : symbol_table) expr = match expr with
 	| This -> void
 	| Null -> void
 	| Id(str) -> check_id scope str
-	| Integer_literal(i) -> Int
-	| String_literal(str) -> String
-	| Boolean_literal(b) -> Boolean
+	| Integer_literal(i) -> Sast.IntConst(i), Int
+	| String_literal(str) -> Sast.StrConst(str), String
+	| Boolean_literal(b) -> Sast.BoolConst(b), Boolean
 	| Array_access as a ->
-		check_array_access scope a
+		let t = check_array_access scope a in
+		Sast.ArrayAccess(a, )
 	| Assign as a ->
 		check_assign scope a
 	| Uniop(op, expr) ->
@@ -209,25 +210,29 @@ let process_func_formals (env : translation_environment) f =
 	let scope' = List.iter (fun var -> scope.variables:: head) *)
 
 let process_var_decl (scope : symbol_table) v =
-	let tuple = match v with
-		Variable(t, name) -> (name, t)
-		| Variable_Initialization(t, name, expr) -> if t <> check_expr expr then raise Failure "wrong type" else (name, t) 
+	let triple = match v with
+		Variable(t, name) -> (name, v, t)
+		| Variable_Initialization(t, name, expr) -> if t <> check_expr expr then raise Failure "wrong type" else (name, v, t) 
 		| Array_Initialization(t, name, el) ->
 			try 
-				_ = List.find( fun elem -> t <> check_expr elem) in raise Failure "wrong type"
+				_ = List.find( fun elem -> t <> check_expr elem) el in raise Failure "wrong type"
 			with Not_found ->
-				(name, t) (* FLAG TO SEE IF ARRAY PLEASE *)
+				(name, v, t) (* FLAG TO SEE IF ARRAY PLEASE *)
 		| Struct_Initialization(t, name, el) ->
 			Struct(id) -> 
 				try
 					let s = find_struct scope id in
-
-				with
-				| _ -> failwith "Unknown"
+					try
+						_ = List.iter2 (
+							fun a b -> match a with
+							(t, _ ) -> if t <> check_expr b then raise Failure "wrong type" else t
+							| (t, _, _)  -> if t <> check_expr b then raise Failure "wrong type" else t
+						) s.variable_decls el in
+						(name, v, t)
+					with _ -> raise Failure "Not enough arguments or wrong type."
+				with Not_found -> raise Failure ("struct " ^ id ^ " not found")
 			| _ -> raise Failure "Not a struct"
-
-
-	in { scope with variables = scope.variables :: tuple }
+	in scope.variables <- scope.variables :: triple; Sast.variable_decl(triple)
 
 let process_func_decl (env : translation_environment) f =
 	try
@@ -245,7 +250,6 @@ let process_assert (scope: symbol_table) a =
 	if check_expr expr <> Boolean then raise Failure "assert expr must be boolean " else
 	List.fold_left check_stmt stml
 
-
 let check_struct (scope : symbol_table) s =
 	let scope' = List.fold_left process_var_decl scope s.variable_decls in
 	List.fold_left process_assert scope' s.asserts
@@ -259,32 +263,40 @@ let process_struct_decl (env : translation_environment) s =
 		let scope' = { env.scope with structs = env.scope.structs :: s } in
 		{ env with scope = scope' }
 
-(* TO DO FIX THIS*)
 let process_global_decl (env : translation_environment) g =
 	try
-		let _ = find_id env.scope.variables g in
+		let _ = check_id env.scope.variables g in
 			let name = match g with
 				Variable(_, id) -> id
 				| Variable_Initialization(_, id, _) -> id
 				| Array_Initialization(_, id, _) -> id
 				| Struct_Initialization(_, id, _) -> id
 			in raise Failure ("Variable already declared with name " ^ name)
-	with Not_found ->
-		let scope' = { env.scope with parent = Some(env.scope); variables = env.scope.variables::g } in
+	with Not_found -> process_var_decl env.scope g
+(* 		let scope' = { env.scope with parent = Some(env.scope); variables = env.scope.variables::g } in
 		let scope' = { env.scope with functions = env.scope.functions :: f } in
 		{ env with scope = scope' }
+ *)
 
 let check_program p =
 	let s = { parent = None; variables = []; functions = []; structs = [] } in
 	let env = { scope = s } in
 	let (structs, vars, funcs) = p in 	
-	let env' = List.iter process_struct_decl env structs in
-	let env' = List.iter process_global_decl env vars in
-	let env' = List.iter process_func_decl (List.rev funcs) in
+	let structs = 
+		List.fold_left (
+			fun a global -> a :: process_struct_decl env structs
+		) [] structs in
+	let globals =
+		List.fold_left (
+			fun a global -> a :: process_global_decl env global
+		) [] vars in
+	let List.fold_left (
+			fun a global -> a :: process_func_decl env global
+		) [] funcs in
 	try
 		List.find( fun (_, f, _, _) -> f == "main" ) env.scope.functions
-	with Not_found ->
-		raise Failure "No main function defined."
+	with Not_found -> raise Failure "No main function defined." in
+	structs, globals, funcs
 
 let print_position outx lexbuf =
   let pos = lexbuf.lex_curr_p in

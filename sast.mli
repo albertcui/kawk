@@ -22,3 +22,7 @@ type stmt =
 	| If of expr_detail * stmt * stmt (* if (foo == 42) {} else {} *)
 	| For of expr_detail * expr_detail * expr_detail * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 	| While of expr_detail * stmt
+
+type variable_decl = string * var_decl * var_types
+
+type program = struct_decl list * variable_decl list * func_decl list
