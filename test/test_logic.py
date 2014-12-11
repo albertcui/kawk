@@ -16,11 +16,15 @@ def convert_str(thestring):
 	return testStr
 
 #read the files
-file = open(inputFileName, 'r')
-inputFileStr = file.read()
-file = open(outputFileName, 'a+')
-file.write(" ")
-outputFileStr = file.read()
+file1 = open(inputFileName, 'r')
+inputFileStr = file1.read()
+file2 = open(outputFileName, 'a')
+file2.write(" ")
+file2.close()
+
+file2 = open(outputFileName, 'r')
+outputFileStr = file2.read()
+
 
 #convert to string
 inString = str(inputFileStr)
@@ -31,15 +35,19 @@ inputTestStr = convert_str(inString)
 outputTestStr = convert_str(outString)
 
 
-print outputTestStr
 
 # if the test should 'reject', the overall test will   
 if (inputTestStr[:6] == "REJECT"):
+	inputToCompare = inputTestStr[6:]
 	shouldReject = True
+else:
+	inputToCompare = inputTestStr
 
 print inputFileName
 print outputFileName
-if (outputTestStr == inputTestStr and shouldReject == False):
+if (outputTestStr == inputToCompare and shouldReject == False):
+	print "ACCEPT\n"
+elif (outputTestStr != inputToCompare and shouldReject == True):
 	print "ACCEPT\n"
 else:
 	print "REJECT "
