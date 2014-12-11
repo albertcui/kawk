@@ -1,4 +1,4 @@
-open Ast
+open Sast
 open Lexing
 open Map
 
@@ -176,20 +176,26 @@ let check_assign (scope : symbol_table) a =
 
 let check_call (scope : symbol_table) c =
 	let (id, el) = c in
-	let f = find_func scope.functions id in
-	(* let l1 = List.length f.formals and l2 = List.length el in
-	if l1 <> l2 
-	then raise Failure ("Function " ^ id ^ " expects " ^ (int_to_string l1) ^ " parameters and " (int_to_string l2) " provided.") *)
-	List.iter2 (
-		fun a b -> match a with
-		(t, _ ) -> if t <> check_expr b then raise Failure "wrong type" else t
-		| (t, _, _)  -> if t <> check_expr b then raise Failure "wrong type" else t) f.formals el;
-	f.ftype 	
-
+	try
+		let f = find_func env.scope.functions id in
+			List.iter2 (
+				fun a b -> match a with
+				(t, _ ) -> if t <> check_expr b then raise Failure "wrong type" else t
+				| (t, _, _)  -> if t <> check_expr b then raise Failure "wrong type" else t
+			) f.formals el; f.ftype 	
+	with Not_found -> raise Failure ("Function already declared with name " ^ id)
+	
 let check_access (scope : symbol_table) a =
-	let (id, id) = a in 
+	let (id, id2) = a in 
+	let t = check_id scope id in
+	match t with
+		Struct(id) -> 
+			try
+				let s = find_struct env.scope.structs id in
+				List.find (fun )
 
-
+		| _ -> raise Failure id ^ " is not a struct." 
+	
 let check_uni_op (scope : symbol_table) uniop =
 	let (op, exp) = uniop in
 	let e = check_expr scope e in
