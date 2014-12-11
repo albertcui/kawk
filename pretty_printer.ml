@@ -80,15 +80,23 @@ let print_struct_decl s =
 let print_unit_decl u = 
 	print_string "unit(";
 	print_expr_list u.u_param_list;
-	print_string ") : (";
+	print_string "):(";
 	print_expr u.check_val;
 	print_string ");\n"
+
+let print_param = function
+	Param(var_types, str) -> print_var_types var_types; print_string (str)
+
+let rec print_param_list = function
+	[] -> print_string "";
+	| hd::[] -> print_param hd;
+	| hd::tl -> print_param hd; print_string " ,"; print_param_list tl
 
 let print_func_decl f =
 	print_var_types f.ftype;
 	print_string f.fname; 
 	print_string "(";
-	List.iter print_var_decl f.formals; 
+	print_param_list f.formals; 
 	print_string ") {\n";
 	List.iter print_var_decl f.locals; 
 	List.iter print_stmt f.body;

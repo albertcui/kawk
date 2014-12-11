@@ -19,8 +19,8 @@ rule token = parse
   | "@" { ASSERT }  | "unit" { UNIT } | '.' { ACCESS }
   | "else" { ELSE } | "if" { IF } (* Keywords *)
   | "while" { WHILE } | "for" { FOR }
-  | "return" { RETURN }
-  | "struct" { STRUCT }
+  | "return" { RETURN } | "accept" { ACCEPT }
+  | "struct" { STRUCT } | "reject" { REJECT }
   | "void" { VOID }
   | "this" { THIS } | "null" { NULL }
   | "bool" { BOOL } | "int" { INT } | "str" { STRING } 

@@ -3,7 +3,7 @@
 %token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA
 %token MINUS TIMES DIVIDE MOD STRING INT EOF OR AND NOT PLUS
 %token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL
-%token ACCESS STRUCT ASSERT UNIT THIS NULL VOID EQUALS
+%token ACCESS STRUCT ASSERT UNIT THIS NULL VOID EQUALS ACCEPT REJECT
 %token <string> ID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL
@@ -48,8 +48,8 @@ formals_opt:
 	| formal_list		{ List.rev $1 }
 
 formal_list: 
-	the_type ID 			{ [Variable($1, $2)] }
-	| formal_list COMMA the_type ID 	{ Variable($3, $4) :: $1 }
+	the_type ID 			{ [Param($1, $2)] }
+	| formal_list COMMA the_type ID 	{ Param($3, $4) :: $1 }
 
 vdecl_list:
 	/* nothing */		{ [] }
@@ -69,7 +69,7 @@ udecl_list:
 	| udecl_list udecl 	{ $2 :: $1 }
 
 udecl:
-	UNIT LPAREN actuals_list RPAREN COLON EQUALS LPAREN expr RPAREN SEMI 
+	UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN SEMI 
 	{ { u_param_list = $3;
 		check_val = $8; } }
 
