@@ -133,60 +133,73 @@ and check_access (scope : symbol_table) a = match a with
 	| _ -> raise (Failure "Not an access")	
 
 and check_uni_op (scope : symbol_table) uniop = match uniop with
-	Ast.Uniop(op, expr) -> match op with
-		Not ->
-			let e = check_expr scope expr in
-			let (_, t) = e in 
-			if (t <> Boolean) then raise Failure "Incorrect type for ! " else Sast.Uniop(op, e), Boolean
-	| _ -> raise Failure (e ^ " is not a unary operator")
-
+	Ast.Uniop(op, expr) -> (
+		match op with
+			Not ->
+				let e = check_expr scope expr in
+				let (_, t) = e in 
+				if (t <> Boolean) then raise (Failure "Incorrect type for ! ") else Sast.Uniop(op, e), Boolean
+			| _ -> raise (Failure "Not a unary operator")
+		)
+	| _ -> raise (Failure "Not a uniop")	
 (* 
 let process_func_formals (env : translation_environment) f =
 	let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
 	let scope' = List.iter (fun var -> scope.variables:: head) *)
 
-let rec check_stmt (scope : symbol_table) stmt = match stmt with
-	Block(sl) -> List.fold_left ( fun a s -> a :: check_statement scope s ) [] sl
-	| Expr(e) -> check_expr scope e
+let rec check_stmt (scope : symbol_table) (stmt : Ast.stmt) = match stmt with
+	(* Block(sl) -> List.fold_left ( fun a s -> (check_stmt scope s) :: a) [] sl *)
+	Expr(e) -> check_expr scope e
 	| Return(e) -> check_expr scope e
-	| If(expr, stmt1, stmt2) -> 
-		let expr = check_expr scope expr in
-		let stmt1 = check_stmt scope stmt1 in
-		let stmt2 = check_stmt scope stmt2 in
-		Sast.If(expr, stmt1, stmt2)
-	| For(expr1, expr2, expr3, stmt) ->
-		let expr = check_expr scope expr in
-		let expr2 = check_expr scope expr2 in
+(* 	| If(expr, stmt1, stmt2) -> 
+		let new_expr = check_expr scope expr in
+		let new_stmt1 = check_stmt scope stmt1 in
+		let new_stmt2 = check_stmt scope stmt2 in
+		Sast.If(new_expr, new_stmt1, new_stmt2) *)
+	(* | For(expr1, expr2, expr3, stmt) -> *)
+		(* let expr = check_expr scope expr1 in *)
+(* 		let expr2 = check_expr scope expr2 in
 		let expr3 = check_expr scope expr3 in
-		let stmt = check_stmt scope stmt in
-		Sast.For(expr, expr2, expr3, stmt)
-	| While(expr, stmt) ->
+		let stmt = check_stmt scope stmt in *)
+		(* Sast.For(expr, expr, expr, expr) *)
+(* 	(* | While(expr, stmt) -> *)
 		let expr = check_expr scope expr in
 		let stmt = check_stmt scope stmt in
 		Sast.While(expr, stmt)
-
+ *)
 let process_var_decl (scope : symbol_table) v =
 	let triple = match v with
 		Variable(t, name) -> (name, v, t)
-		| Variable_Initialization(t, name, expr) -> if t <> check_expr expr then raise Failure "wrong type" else (name, v, t) 
+		| Variable_Initialization(t, name, expr) -> 
+			let (_, t2 ) = check_expr scope expr in
+			if t <> t2 then raise (Failure "wrong type") else (name, v, t) 
 		| Array_Initialization(t, name, el) ->
-			try 
-				let _ = List.find( fun elem -> t <> check_expr elem) el in raise Failure "wrong type"
-			with Not_found -> (name, v, t)
-		| Struct_Initialization(t, name, el) -> match var_types with
-			Struct(id) -> 
-				try
-					let s = find_struct scope id in
-					try
-						let _ = List.iter2 (
-							fun a b -> match a with
-							(t, _ ) -> if t <> check_expr b then raise Failure "wrong type" else t
-							| (t, _, _)  -> if t <> check_expr b then raise Failure "wrong type" else t
-						) s.variable_decls el in
-						(name, v, t)
-					with _ -> raise Failure "Not enough arguments or wrong type."
-				with Not_found -> raise Failure ("struct " ^ id ^ " not found")
-			| _ -> raise Failure "Not a struct"
+			(try 
+				let _ = List.find (fun elem -> let (_, t2 ) = check_expr scope elem in t <> t2) el 
+				in raise (Failure "wrong type")
+			with Not_found -> (name, v, t))
+		| Struct_Initialization(t, name, el) -> 
+			(
+				match t with
+					Struct(id) -> 
+						(
+							try
+								let s = find_struct scope.structs id in
+								(* DO NOT THROW AWAY RESPONSE*)
+								let _ = List.iter2 (
+									fun a b -> let t = match a with
+									Variable(t, _) -> t
+									| Variable_Initialization(t, _, _) -> t
+									| Array_Initialization(t, _, _) -> t
+									| Struct_Initialization(t, _, _) -> t in
+									let e = check_expr scope b in
+									let (_, t2) = e in
+									if t <> t2 then raise (Failure "types are not the same") else 
+								) s.variable_decls el in (name, v, t)
+							with _ -> raise (Failure ("struct " ^ id ^ " not found"))
+						)
+					| _ -> raise (Failure "Not a struct")
+			)
 	in scope.variables <- scope.variables :: triple; (* Update the scope *)
 	Sast.variable_decl(triple)
 

@@ -1,18 +1,10 @@
 open Ast
 
-(* type var_types =
-	Void
-	| Int
-	| String
-	| Boolean
-	| Struct of string
-	| Array of var_types * expr
+(*
+TODO
 
-type var_decl =
-	Variable of var_types * string
-	| Variable_Initialization of var_types * string * expr
-	| Array_Initialization of var_types * string * expr list
-	| Struct_Initialization of var_types * string * expr list *)
+Add definition of struct to SAST
+*)
 
 type variable_decl = var_decl * var_types
 
