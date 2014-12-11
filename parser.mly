@@ -69,9 +69,9 @@ udecl_list:
 	| udecl_list udecl 	{ $2 :: $1 }
 
 udecl:
-	UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN SEMI 
-	{ { u_param_list = $3;
-		check_val = $8; } }
+	UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { { u_param_list = $3; check_val = $8; } }
+	| UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { { u_param_list = $3; check_val = $8; } }
+
 
 /* ------------- end udecl stuff --------------*/
 
