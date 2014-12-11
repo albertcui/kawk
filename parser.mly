@@ -33,7 +33,7 @@ program:
 	| program sdecl { let (str, var, func) = $1 in $2::str, var, func }
 	| program vdecl { let (str, var, func) = $1 in str, $2::var, func } /* int world = 4; */
 	| program fdecl { let (str, var, func) = $1 in str, var, $2::func }
-	
+
 fdecl:
 	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list udecl_list RBRACE
 	{ { ftype   = $1;
@@ -69,9 +69,10 @@ udecl_list:
 	| udecl_list udecl 	{ $2 :: $1 }
 
 udecl:
-	UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { { u_param_list = $3; check_val = $8; } }
-	| UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { { u_param_list = $3; check_val = $8; } }
-
+	UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { Local_a_udecl($3, $8) }
+	| UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { Local_r_udecl($3, $8) }
+	| UNIT COLON ID LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { Outer_a_udecl($3, $5, $10) }
+	| UNIT COLON ID LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { Outer_r_udecl($3, $5, $10) }
 
 /* ------------- end udecl stuff --------------*/
 

@@ -46,10 +46,11 @@ type struct_decl = {
 	asserts: (expr * stmt list) list; (* @ (bar > 1) { ... } *)
 }
 
-type unit_decl = {
-	u_param_list: expr list;
-	check_val: expr;
-}
+type unit_decl =
+	Local_a_udecl of expr list * expr
+	| Local_r_udecl of expr list * expr
+	| Outer_a_udecl of string * expr list * expr
+	| Outer_r_udecl of string * expr list * expr
 
 type func_decl = {
 	ftype: var_types;

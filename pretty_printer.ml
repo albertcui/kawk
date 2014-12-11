@@ -76,13 +76,12 @@ let print_struct_decl s =
 	List.iter print_var_decl s.variable_decls;
 	List.iter print_asserts s.asserts;
 	print_string "}"
-
-let print_unit_decl u = 
-	print_string "unit(";
-	print_expr_list u.u_param_list;
-	print_string "):(";
-	print_expr u.check_val;
-	print_string ");\n"
+	
+let print_unit_decl = function
+	Local_a_udecl(udecl_params, udecl_check_val) -> print_string "unit("; print_expr_list udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
+	| Local_r_udecl(udecl_params, udecl_check_val) -> print_string "unit("; print_expr_list udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
+	| Outer_a_udecl(str, udecl_params, udecl_check_val) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
+	| Outer_r_udecl(str, udecl_params, udecl_check_val) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
 
 let print_param = function
 	Param(var_types, str) -> print_var_types var_types; print_string (str)
