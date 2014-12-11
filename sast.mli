@@ -31,13 +31,13 @@ type expr_detail =
 	| IntConst of int
 	| StrConst of string
 	| BoolConst of bool
-	| ArrayAccess of variable_decl * expression
-	| Id of variable_decl
+	| ArrayAccess of var_decl * expression
+	| Id of var_decl
 	| Call of function_decl * expression list
-	| Access of struct_decl * variable_decl
+	| Access of struct_decl * var_decl
 	| Uniop of op * expression
-	| Binop of expr_detail * op * expression
-	| Assign of variable_decl * expression
+	| Binop of expression * op * expression
+	| Assign of var_decl * expression
 and expression = expr_detail * var_types
 
 type stmt = 

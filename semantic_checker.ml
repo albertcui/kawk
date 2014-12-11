@@ -7,190 +7,132 @@ type function_table = {
 	funcs : func_decl list
 }
 
+type symbol_table = {
+	parent : symbol_table option;
+	variables : (string * var_decl * var_types) list;
+	functions : function_decl list;
+	structs : struct_decl list;
+}
+
 type translation_environment = {
 	scope : symbol_table (* symbol table for vars *)
 	(* return_type : var_types Function’s return type *)
 }
 
-type symbol_table = {
-	parent : symbol_table option;
-	variables : string * variable_decl * var_types list;
-	functions : func_decl list;
-	structs : struct_decl list
-}
-
 let find_struct (s : struct_decl list) stru =
 	List.find(fun c -> c.sname = stru) s
 
-let find_func (l : func_decl list) f =
-	List.find(fun c -> c.fname = f.fname) l
-(* 
-let rec find_variable (scope : symbol_table) name =
-	try
-		List.find (fun (s, _, _, _) -> s = name) scope.variables
-	with Not_found ->
-		match scope.parent with
-		Some(parent) -> find_variable parent name
-		| _ -> raise Not_found
-
-let rec find_func (funcs : function_table) name = 
-	try
-		List.find  *)
-(*
-let rec expr env = 
-	(* An integer constant: convert and return Int type *)
-	Ast.IntConst(v) -> Sast.IntConst(v), Types.Ints
-	(* An identifier: verify it is in scope and return its type *)
-	| Ast.Id(vname) ->
-		let vdecl = try
-		find_variable env.scope vname (* locate a variable by name *)
-		with Not_found ->
-		raise (Error("undeclared identifier " ^ vname))
-		in
-		let (_, typ) = vdecl in (* get the variable’s type *)
-		Sast.Id(vdecl), typ
-	| Ast.Binop(e1, op, e2) ->
-		let e1 = expr env e1 and e2 = expr env e2 in (* Check left and right children *)
-		let _, t1 = e1 (* Get the type of each child *)
-		and _, t2 = e2 in
-		if op <> Ast.Equal && op <> Ast.NotEqual then
-		(* Most operators require both left and right to be integer *)
-		(require_integer e1 "Left operand must be integer";
-		require_integer e2 "Right operand must be integer")
-		else
-		if not (weak_eq_type t1 t2) then
-		(* Equality operators just require types to be "close" *)
-		error ("Type mismatch in comparison: left is " ^
-		Printer.string_of_sast_type t1 ^ "\" right is \"" ^
-		Printer.string_of_sast_type t2 ^ "\""
-		) loc;
-		Sast.BinOp(e1, op, e2), Types.Int (* Success: result is int *)
-
-let rec stmt env = 
-	(* Expression statement: just check the expression *)
-	Ast.Expression(e) -> Sast.Expression(expr env e)
-	(* If statement: verify the predicate is integer *)
-	| Ast.If(e, s1, s2) ->
-		let e = check_expr env e in (* Check the predicate *)
-		require_integer e "Predicate of if must be integer";
-		Sast.If(e, stmt env s1, stmt env s2) (* Check then, else *)
-	(* let rec stmt env = function *)
-	| Ast.Local(vdecl) ->
-		let decl, (init, _) = check_local vdecl (* already declared? *)
-		in
-		(* side-effect: add variable to the environment *)
-		env.scope.variables <- decl :: env.scope.variables;
-		init (* initialization statements, if any *)
-	(* let rec stmt env = function *)
-	| Ast.Block(sl) ->
-		(* New scopes: parent is the existing scope, start out empty *)
-		let scope' = { parent = Some(env.scope); variables = [] } in
-		(* New environment: same, but with new symbol tables *)
-		let env' = { env with scope = scope' } in
-		(* Check all the statements in the block *)
-		let sl = List.map (fun s -> stmt env' s) sl in
-		scope'.variables <-
-		List.rev scope'.variables; (* side-effect *)
-		Sast.Block(scope', sl) (* Success: return block with symbols *)
-*)
+let find_func (l : function_decl list) f =
+	List.find(fun c -> c.fname = f) l
 
 let rec check_id (scope : symbol_table) id =
 	try
-		let (_, decl, t) = List.find(fun (name, _ ) -> name = id) scope.variables in decl, t
+		let (_, decl, t) = List.find(fun (n, _, _) -> n = id ) scope.variables in
+		decl, t
 	with Not_found -> match scope.parent with
-		Some(parent) -> check_id scope.parent id
+		Some(parent) -> check_id parent id
 		| _ -> raise Not_found
  
-let check_op (scope : symbol_table) binop = 
-	let (xp1, op, xp1) = binop in
-	let e1 = check_expr scope xp1 and e2 = check_expr scope xp2 in
-	let (_, t1) = e1 and (_, t2) = e2 in
-	let t = match op with
-		Add ->
-			if (t1 <> Int || t2 <> Int) then
-				if (t1 <> String || t2 <> String) then raise Failure "Incorrect types for + "
-				else String
-			else Int
-		| Sub -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for - " else Int
-		| Mult -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for * " else Int
-		| Div -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for / " else Int
-		| Mod -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for % " else Int
-		| Equal -> if (t1 <> t2) then raise Failure "Incorrect types for = " else Boolean
-		| Neq -> if (t1 <> t2) then raise Failure "Incorrect types for != " else Boolean
-		| Less -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for < " else Int
-		| Leq -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for <= " else Int
-		| Greater -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for > " else Int
-		| Geq -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for >= " else Int
-		| Or -> if (t1 <> Boolean || t2 <> Boolean) then raise Failure "Incorrect types for | " else Boolean
-		| And -> if (t1 <> Boolean || t2 <> Boolean) then raise Failure "Incorrect types for & " else Boolean
-		| Not -> raise Failure "! is a unary operator."
-	in Sast.Binop(e1, op, e2), t
-
-let check_array_access (scope : symbol_table) a =
-	let (id, expr) = a in
-	let (decl, t) = check_id scope id in
-	let e1 = check_expr scope expr in
-	let (_, t2) = e1 in
-	if t2 <> Int then raise Failure "Array access must be integer." else
-	Sast.ArrayAccess(decl, e1), t
-
-let check_assign (scope : symbol_table) a =
-	let (id, expr) = a in
-	let (decl, t) = check_id scope id in
-	let e = check_expr scope expr in
-	let (_, t2) = e in
-	if t <> t2 then raise Failure "Incorrect type assignment." else Access(decl, e), t
-
-let check_call (scope : symbol_table) c =
-	let (id, el) = c in
-	try
-		let f = find_func env.scope.functions id in
-			List.iter2 (
-				fun a b -> match a with
-				(t, _ ) -> if t <> check_expr b then raise Failure "wrong type" else t
-				| (t, _, _)  -> if t <> check_expr b then raise Failure "wrong type" else t
-			) f.formals el; f.ftype 	
-	with Not_found -> raise Failure ("Function already declared with name " ^ id)
-	
-let check_access (scope : symbol_table) a =
-	let (id, id2) = a in 
-	let (_, t) = check_id scope id in match t with
-	Struct(id) -> 
-		try
-			let s = find_struct env.scope.structs id in
-			let var = List.find (
-				fun v -> match v with
-				(_, n) -> n = id
-				| (_, n, _) -> n = id
-			) s.variable_decls in match var with
-			(t, _ ) -> Sast.Access(id, var), t
-			| (t, _, _) -> Sast.Access(id, var), t
-		with Not_found -> raise Failure "Struct or access not found."
-	| _ -> raise Failure id ^ " is not a struct." 
-	
-let check_uni_op (scope : symbol_table) uniop =
-	let (op, exp) = uniop in
-	match op with
-	Not ->
-		let e = check_expr scope e in
-		let (_, t) = e in 
-		if (t <> Boolean) then raise Failure "Incorrect type for ! " else Sast.Uniop(op, e), Boolean
-	| _ -> raise Failure (e ^ " is not a unary operator")
-
-let rec check_expr (scope : symbol_table) expr = match expr with
+ let rec check_expr (scope : symbol_table) (expr : Ast.expr) = match expr with
 	Noexpr -> Sast.Noexpr, Void
 	| This -> Sast.This, Void
-	| Null -> sast.Null, Void
-	| Id(str) -> check_id scope str 
+	| Null -> Sast.Null, Void
+	| Id(str) -> let (decl, t) = check_id scope str in Sast.Id(decl), t 
 	| Integer_literal(i) -> Sast.IntConst(i), Int
 	| String_literal(str) -> Sast.StrConst(str), String
 	| Boolean_literal(b) -> Sast.BoolConst(b), Boolean
-	| Array_access as a -> check_array_access scope a
-	| Assign as a -> check_assign scope a
+	| Array_access(_, _) as a -> check_array_access scope a
+	| Assign(_, _) as a -> check_assign scope a
 	| Uniop(op, expr) -> check_uni_op scope op
-	| Binop as b -> check_op scope b
-	| Call as c -> check_call scope c
-	| Access as a -> check_access scope a
+	| Binop(_, _, _) as b -> check_op scope b
+	| Call(_, _) as c -> check_call scope c
+	| Access(_, _) as a -> check_access scope a
+
+and check_op (scope : symbol_table) binop = match binop with
+	Ast.Binop(xp1, op, xp2) ->
+		let e1 = check_expr scope xp1 and e2 = check_expr scope xp2 in
+		let (_, t1) = e1 and (_, t2) = e2 in
+		let t = match op with
+			Add ->
+				if (t1 <> Int || t2 <> Int) then
+					if (t1 <> String || t2 <> String) then raise (Failure "Incorrect types for +")
+					else String
+				else Int
+			| Sub -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for - ") else Int
+			| Mult -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for * ") else Int
+			| Div -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for / ") else Int
+			| Mod -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for % ") else Int
+			| Equal -> if (t1 <> t2) then raise (Failure "Incorrect types for = ") else Boolean
+			| Neq -> if (t1 <> t2) then raise (Failure "Incorrect types for != ") else Boolean
+			| Less -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for < ") else Int
+			| Leq -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for <= ") else Int
+			| Greater -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for > ") else Int
+			| Geq -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for >= ") else Int
+			| Or -> if (t1 <> Boolean || t2 <> Boolean) then raise (Failure "Incorrect types for | ") else Boolean
+			| And -> if (t1 <> Boolean || t2 <> Boolean) then raise (Failure "Incorrect types for & ") else Boolean
+			| Not -> raise (Failure "! is a unary operator.")
+		in Sast.Binop(e1, op, e2), t
+	| _ -> raise (Failure "Not an op")
+
+and check_array_access (scope : symbol_table) a = match a with
+	Ast.Array_access(id, expr) ->
+		let (decl, t) = check_id scope id in
+		let e1 = check_expr scope expr in
+		let (_, t2) = e1 in
+		if t2 <> Int then raise (Failure "Array access must be integer.") else
+		Sast.ArrayAccess(decl, e1), t
+	| _ -> raise (Failure "Not an array access")
+
+and check_assign (scope : symbol_table) a = match a with
+	Ast.Assign(id, expr) ->
+		let (decl, t) = check_id scope id in
+		let e = check_expr scope expr in
+		let (_, t2) = e in
+		if t <> t2 then raise (Failure "Incorrect type assignment.") else Sast.Assign(decl, e), t
+	| _ -> raise (Failure "Not an assignment")
+
+and check_call (scope : symbol_table) c = match c with
+	Ast.Call(id, el) ->
+		try
+			let f = find_func scope.functions id in
+			let exprs = List.fold_left2 (
+					fun a b c -> match b with
+						Variable(t, _ ) ->
+							let expr = check_expr scope c in
+							let (_, t2) = expr in
+							if t <> t2
+							then raise (Failure "wrong type")
+							else expr :: a
+						| _ -> raise (Failure "Cannot have assignments in function definition")
+				) [] f.formals el in
+			Sast.Call(f, exprs), f.ftype
+		with Not_found -> raise Failure ("Function already declared with name " ^ id)
+	| _ -> raise (Failure "Not a call")	
+
+and check_access (scope : symbol_table) a = match a with
+	Ast.Access(id, id2) ->
+		let (_, t) = check_id scope id in match t with
+		Struct(id) -> 
+			try
+				let s = find_struct env.scope.structs id in
+				let var = List.find (
+					fun v -> match v with
+					(_, n) -> n = id
+					| (_, n, _) -> n = id
+				) s.variable_decls in match var with
+				(t, _ ) -> Sast.Access(id, var), t
+				| (t, _, _) -> Sast.Access(id, var), t
+			with Not_found -> raise (Failure "Struct or access not found.")
+	| _ -> raise (Failure id ^ " is not a struct.")
+	
+and check_uni_op (scope : symbol_table) uniop = match uniop with
+	Ast.Uniop(op, exp) ->
+		match op with
+		Not ->
+			let e = check_expr scope e in
+			let (_, t) = e in 
+			if (t <> Boolean) then raise Failure "Incorrect type for ! " else Sast.Uniop(op, e), Boolean
+	| _ -> raise Failure (e ^ " is not a unary operator")
 
 (* 
 let process_func_formals (env : translation_environment) f =
@@ -223,15 +165,14 @@ let process_var_decl (scope : symbol_table) v =
 		| Variable_Initialization(t, name, expr) -> if t <> check_expr expr then raise Failure "wrong type" else (name, v, t) 
 		| Array_Initialization(t, name, el) ->
 			try 
-				_ = List.find( fun elem -> t <> check_expr elem) el in raise Failure "wrong type"
-			with Not_found ->
-				(name, v, t) (* FLAG TO SEE IF ARRAY PLEASE *)
-		| Struct_Initialization(t, name, el) ->
+				let _ = List.find( fun elem -> t <> check_expr elem) el in raise Failure "wrong type"
+			with Not_found -> (name, v, t)
+		| Struct_Initialization(t, name, el) -> match var_types with
 			Struct(id) -> 
 				try
 					let s = find_struct scope id in
 					try
-						_ = List.iter2 (
+						let _ = List.iter2 (
 							fun a b -> match a with
 							(t, _ ) -> if t <> check_expr b then raise Failure "wrong type" else t
 							| (t, _, _)  -> if t <> check_expr b then raise Failure "wrong type" else t
@@ -245,11 +186,12 @@ let process_var_decl (scope : symbol_table) v =
 
 let process_func_decl (env : translation_environment) f =
 	try
-		let _ = find_func env.scope.functions f in
+		let _ = find_func env.scope.functions f.fname in
 			raise Failure ("Function already declared with name " ^ f.fname)
 	with Not_found ->
 		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
-		List.iter process_var_decl scope' f.formals::f.locals in
+		let _ = List.iter process_var_decl scope' f.formals::f.locals in
+		(* should we keep result of process_var_decl? *)
 		let statments = List.fold_left (
 			fun a s -> a :: check_statement scope' s
 		) [] f.body in
@@ -263,7 +205,8 @@ let process_assert (scope: symbol_table) a =
 
 let check_struct (scope : symbol_table) s =
 	let scope' = { scope with parent = Some(scope); variables = [] } in
-	List.iter process_var_decl scope' s.variable_decls in
+	let _ = List.iter process_var_decl scope' s.variable_decls in
+	(* should we keep result of process_var_decl? *)
 	List.iter process_assert scope' s.asserts
 
 let process_struct_decl (env : translation_environment) s =
@@ -276,7 +219,7 @@ let process_struct_decl (env : translation_environment) s =
 
 let process_global_decl (env : translation_environment) g =
 	try
-		let _ = check_id env.scope.variables g in
+		let _ = check_id env.scope g in
 			let name = match g with
 				Variable(_, id) -> id
 				| Variable_Initialization(_, id, _) -> id
@@ -305,9 +248,9 @@ let check_program p =
 			fun a f -> a :: process_func_decl env f
 		) [] funcs in
 	try
-		List.find( fun (_, f, _, _) -> f == "main" ) env.scope.functions
-	with Not_found -> raise Failure "No main function defined." in
-	structs, globals, funcs
+		let _ = List.find( fun (_, f, _, _) -> f == "main" ) env.scope.functions in
+		structs, globals, funcs
+	with Not_found -> raise Failure "No main function defined."
 
 let print_position outx lexbuf =
   let pos = lexbuf.lex_curr_p in
