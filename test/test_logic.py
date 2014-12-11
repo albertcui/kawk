@@ -2,8 +2,6 @@
 #the output after parsed by the trees and printed by the pretty printer
 #This will be expanded to accomodate more tests in the future
 
-#Author: Karen Nan 
-
 import sys
 inputFileName = sys.argv[1]
 outputFileName = sys.argv[2]
