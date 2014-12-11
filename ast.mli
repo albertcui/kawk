@@ -31,6 +31,9 @@ type var_types =
 	| Struct of string
 	| Array of var_types * expr
 
+type fn_param_decl =
+	Param of var_types * string
+
 type var_decl =
 	Variable of var_types * string
 	| Variable_Initialization of var_types * string * expr
@@ -44,14 +47,14 @@ type struct_decl = {
 }
 
 type unit_decl = {
-		u_param_list: expr list;
-		check_val: expr;
+	u_param_list: expr list;
+	check_val: expr;
 }
 
 type func_decl = {
 	ftype: var_types;
 	fname : string; (* Name of the function *)
-	formals : var_decl list; (* Formal argument names *)
+	formals : fn_param_decl list; (* Formal argument names *)
 	locals : var_decl list; (* Locally defined variables *)
 	body : stmt list;
 	units : unit_decl list; (* Series of unit tests *)
