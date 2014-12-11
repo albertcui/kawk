@@ -43,7 +43,7 @@ let rec check_id (scope : symbol_table) id =
 	| Boolean_literal(b) -> Sast.BoolConst(b), Boolean
 	| Array_access(_, _) as a -> check_array_access scope a
 	| Assign(_, _) as a -> check_assign scope a
-	| Uniop(op, expr) -> check_uni_op scope op
+	| Uniop(op, expr) as u -> check_uni_op scope u
 	| Binop(_, _, _) as b -> check_op scope b
 	| Call(_, _) as c -> check_call scope c
 	| Access(_, _) as a -> check_access scope a
@@ -93,43 +93,49 @@ and check_assign (scope : symbol_table) a = match a with
 
 and check_call (scope : symbol_table) c = match c with
 	Ast.Call(id, el) ->
-		try
+		(try
 			let f = find_func scope.functions id in
 			let exprs = List.fold_left2 (
-					fun a b c -> match b with
-						Variable(t, _ ) ->
-							let expr = check_expr scope c in
-							let (_, t2) = expr in
-							if t <> t2
-							then raise (Failure "wrong type")
-							else expr :: a
-						| _ -> raise (Failure "Cannot have assignments in function definition")
+					fun a b c -> 
+						let (_, t) = b in
+						let expr = check_expr scope c in
+						let (_, t2) = expr in
+						if t <> t2
+						then raise (Failure "wrong type")
+						else expr :: a
 				) [] f.formals el in
 			Sast.Call(f, exprs), f.ftype
-		with Not_found -> raise Failure ("Function already declared with name " ^ id)
+		with Not_found -> raise (Failure ("Function already declared with name " ^ id)))
 	| _ -> raise (Failure "Not a call")	
 
 and check_access (scope : symbol_table) a = match a with
 	Ast.Access(id, id2) ->
-		let (_, t) = check_id scope id in match t with
-		Struct(id) -> 
-			try
-				let s = find_struct env.scope.structs id in
-				let var = List.find (
-					fun v -> match v with
-					(_, n) -> n = id
-					| (_, n, _) -> n = id
-				) s.variable_decls in match var with
-				(t, _ ) -> Sast.Access(id, var), t
-				| (t, _, _) -> Sast.Access(id, var), t
-			with Not_found -> raise (Failure "Struct or access not found.")
-	| _ -> raise (Failure id ^ " is not a struct.")
-	
+		(let (_, t) = check_id scope id in match t with
+			Struct(id) -> 
+				(try
+					let s = find_struct scope.structs id in
+					let var = List.find (
+						fun v -> match v with
+						Variable(_, n) -> n = id
+						| Variable_Initialization(_, n, _) -> n = id
+						| Array_Initialization(_, n, _) -> n = id
+						| Struct_Initialization(_, n, _) -> n = id
+					) s.variable_decls in 
+					let t = match var with
+						Variable(t, _) -> t
+						| Variable_Initialization(t, _, _) -> t
+						| Array_Initialization(t, _, _) -> t
+						| Struct_Initialization(t, _, _) -> t
+					in Sast.Access(s, var), t
+				with Not_found -> raise (Failure "Struct or access not found."))
+			| _ -> raise (Failure (id ^ " is not a struct."))
+		)
+	| _ -> raise (Failure "Not an access")	
+
 and check_uni_op (scope : symbol_table) uniop = match uniop with
-	Ast.Uniop(op, exp) ->
-		match op with
+	Ast.Uniop(op, expr) -> match op with
 		Not ->
-			let e = check_expr scope e in
+			let e = check_expr scope expr in
 			let (_, t) = e in 
 			if (t <> Boolean) then raise Failure "Incorrect type for ! " else Sast.Uniop(op, e), Boolean
 	| _ -> raise Failure (e ^ " is not a unary operator")
