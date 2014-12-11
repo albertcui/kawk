@@ -34,7 +34,7 @@ type expr_detail =
 	| ArrayAccess of variable_decl * expression
 	| Id of variable_decl
 	| Call of function_decl * expression list
-	| Access of struct_decl * string
+	| Access of struct_decl * variable_decl
 	| Uniop of op * expression
 	| Binop of expr_detail * op * expression
 	| Assign of variable_decl * expression

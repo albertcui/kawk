@@ -20,8 +20,7 @@ type symbol_table = {
 }
 
 let find_struct (s : struct_decl list) stru =
-	List.find(fun c -> c.sname = stru.sname) s
-
+	List.find(fun c -> c.sname = stru) s
 
 let find_func (l : func_decl list) f =
 	List.find(fun c -> c.fname = f.fname) l
@@ -155,14 +154,19 @@ let check_call (scope : symbol_table) c =
 	
 let check_access (scope : symbol_table) a =
 	let (id, id2) = a in 
-	let t = check_id scope id in
-	match t with
-		Struct(id) -> 
-			try
-				let s = find_struct env.scope.structs id in
-				List.find (fun )
-
-		| _ -> raise Failure id ^ " is not a struct." 
+	let (_, t) = check_id scope id in match t with
+	Struct(id) -> 
+		try
+			let s = find_struct env.scope.structs id in
+			let var = List.find (
+				fun v -> match v with
+				(_, n) -> n = id
+				| (_, n, _) -> n = id
+			) s.variable_decls in match var with
+			(t, _ ) -> Sast.Access(id, var), t
+			| (t, _, _) -> Sast.Access(id, var), t
+		with Not_found -> raise Failure "Struct or access not found."
+	| _ -> raise Failure id ^ " is not a struct." 
 	
 let check_uni_op (scope : symbol_table) uniop =
 	let (op, exp) = uniop in
@@ -264,7 +268,7 @@ let check_struct (scope : symbol_table) s =
 
 let process_struct_decl (env : translation_environment) s =
 	try
-		let _ = find_struct env.scope.structs s in
+		let _ = find_struct env.scope.structs s.sname in
 			raise Failure ("struct already declared with name " ^ s.sname)
 	with Not_found ->
 		check_struct env.scope s;(* Throw away scope of the struct *)
@@ -291,14 +295,14 @@ let check_program p =
 	let (structs, vars, funcs) = p in 	
 	let structs = 
 		List.fold_left (
-			fun a global -> a :: process_struct_decl env structs
+			fun a s -> a :: process_struct_decl env s
 		) [] structs in
 	let globals =
 		List.fold_left (
-			fun a global -> a :: process_global_decl env global
+			fun a g -> a :: process_global_decl env g
 		) [] vars in
 	let funcs = List.fold_left (
-			fun a global -> a :: process_func_decl env funcs
+			fun a f -> a :: process_func_decl env f
 		) [] funcs in
 	try
 		List.find( fun (_, f, _, _) -> f == "main" ) env.scope.functions
