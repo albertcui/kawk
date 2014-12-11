@@ -4,8 +4,21 @@ echo "-----------------------------------------"
 echo "-----------------BEGIN-------------------"
 echo "-----------------------------------------"
 echo "-----------------------------------------"
-rm output*.k
-for filename in *.k; do
-	.././pretty < "$filename" > "output_$filename"
-	python test_logic.py "$filename" "output_$filename"
-done
+
+cd ../
+make clean
+if make
+	then
+		cd test/
+		for filename in *.k; do
+			.././pretty < "$filename" > "output_$filename"
+			python test_logic.py "$filename" "output_$filename"
+		done
+		echo "-----------------------------------------"
+		echo "-----------------------------------------"
+		echo "-----------------END---------------------"
+		echo "-----------------------------------------"
+		echo "-----------------------------------------"
+else
+	exit
+fi

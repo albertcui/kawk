@@ -29,9 +29,21 @@ let rec print_expr = function
 	| Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr
 	| Uniop(op, expr) -> print_op op; print_expr expr
 	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2
-	| Call(str, expr_list) -> Printf.printf "%s(" str; List.iter print_expr expr_list; print_string ") "
+	| Call(str, expr_list) -> Printf.printf "%s(" str; let rec print_expr_list_comma = function
+	[] -> print_string ""
+	| hd::[] -> print_expr hd
+	| hd::tl -> print_expr hd; print_string ", "; print_expr_list_comma tl 
+	in print_expr_list_comma expr_list; print_string ") "
 	| Access(str1, str2) -> Printf.printf "%s.%s " str1 str2 
 
+let rec print_expr_list_comma = function
+	[] -> print_string ""
+	| hd::[] -> print_expr hd
+	| hd::tl -> print_expr hd; print_string ", "; print_expr_list_comma tl 
+
+(* and print_expr_comma expr =
+	print_expr expr; print_string ", "
+	 *)
 let print_expr_semi e = 
 	print_expr e; print_string ";\n"
 
@@ -39,6 +51,7 @@ let rec print_expr_list = function
 	[] -> print_string ""
 	| hd::[] -> print_expr hd
 	| hd::tl -> print_expr hd; print_string "; "; print_expr_list tl 
+
 
 
 let rec print_stmt = function
@@ -78,10 +91,10 @@ let print_struct_decl s =
 	print_string "}"
 	
 let print_unit_decl = function
-	Local_a_udecl(udecl_params, udecl_check_val) -> print_string "unit("; print_expr_list udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
-	| Local_r_udecl(udecl_params, udecl_check_val) -> print_string "unit("; print_expr_list udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
-	| Outer_a_udecl(str, udecl_params, udecl_check_val) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
-	| Outer_r_udecl(str, udecl_params, udecl_check_val) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
+	Local_a_udecl(udecl_params, udecl_check_val) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
+	| Local_r_udecl(udecl_params, udecl_check_val) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
+	| Outer_a_udecl(str, udecl_params, udecl_check_val) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
+	| Outer_r_udecl(str, udecl_params, udecl_check_val) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
 
 let print_param = function
 	Param(var_types, str) -> print_var_types var_types; print_string (str)
