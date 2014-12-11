@@ -94,86 +94,52 @@ let rec stmt env =
 		Sast.Block(scope', sl) (* Success: return block with symbols *)
 *)
 
-let rec check_stmt (scope : symbol_table) stmt = match stmt with
-	Block(sl) -> List.fold_left check_statement scope sl
-	| Expr(e) -> check_expr scope e
-	| Return(e) -> check_expr scope e
-	| If(expr, stmt1, stmt2) -> 
-		let scope' = check_expr scope expr in
-		let scope' = check_stmt scope' stmt1 in
-		check_stmt scope' stmt2
-	| For(expr1, expr2, expr3, stmt) ->
-		let scope' = check_expr scope expr1 in
-		let scope' = check_expr scope' expr2 in
-		let scope' = check_expr scope' expr3 in
-		check_stmt scope' stmt 
-	| While(expr, stmt) ->
-		let scope' = check_expr scope expr in
-		check_stmt scope' stmt
-
-let rec check_expr (scope : symbol_table) expr = match expr with
-	Noexpr
-	| This -> void
-	| Null -> void
-	| Id(str) -> check_id scope str
-	| Integer_literal(i) -> Sast.IntConst(i), Int
-	| String_literal(str) -> Sast.StrConst(str), String
-	| Boolean_literal(b) -> Sast.BoolConst(b), Boolean
-	| Array_access as a ->
-		let t = check_array_access scope a in
-		Sast.ArrayAccess(a, )
-	| Assign as a ->
-		check_assign scope a
-	| Uniop(op, expr) ->
-		check_uni_op scope op
-	| Binop as b ->
-		check_op scope b
-	| Call as c ->
-		check_call scope c
-	| Access as a ->
-		check_access scope a
-
 let rec check_id (scope : symbol_table) id =
 	try
-		let (_, t) = List.find(fun (name, _ ) -> name = id) scope.variables in t
+		let (_, decl, t) = List.find(fun (name, _ ) -> name = id) scope.variables in decl, t
 	with Not_found -> match scope.parent with
 		Some(parent) -> check_id scope.parent id
 		| _ -> raise Not_found
  
 let check_op (scope : symbol_table) binop = 
 	let (xp1, op, xp1) = binop in
-	let e1 = check_expr scope xp1 and e2 = chekc_expr scope xp2 in
-	match op with
-	Add ->
-		if (e1 <> Int || e2 <> Int) then
-			if (e1 <> String || e2 <> String) then raise Failure "Incorrect types for + "
-			else String
-		else Int
-	| Sub -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for - " else Int
-	| Mult -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for * " else Int
-	| Div -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for / " else Int
-	| Mod -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for % " else Int
-	| Equal -> if (e1 <> e2) then raise Failure "Incorrect types for = " else Boolean
-	| Neq -> if (e1 <> e2) then raise Failure "Incorrect types for != " else Boolean
-	| Less -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for < " else Int
-	| Leq -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for <= " else Int
-	| Greater -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for > " else Int
-	| Geq -> if (e1 <> Int || e2 <> Int) then raise Failure "Incorrect types for >= " else Int
-	| Or -> if (e1 <> Boolean || e2 <> Boolean) then raise Failure "Incorrect types for | " else Boolean
-	| And -> if (e1 <> Boolean || e2 <> Boolean) then raise Failure "Incorrect types for & " else Boolean
-	| Not -> raise Failure "! is a unary operator."
+	let e1 = check_expr scope xp1 and e2 = check_expr scope xp2 in
+	let (_, t1) = e1 and (_, t2) = e2 in
+	let t = match op with
+		Add ->
+			if (t1 <> Int || t2 <> Int) then
+				if (t1 <> String || t2 <> String) then raise Failure "Incorrect types for + "
+				else String
+			else Int
+		| Sub -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for - " else Int
+		| Mult -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for * " else Int
+		| Div -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for / " else Int
+		| Mod -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for % " else Int
+		| Equal -> if (t1 <> t2) then raise Failure "Incorrect types for = " else Boolean
+		| Neq -> if (t1 <> t2) then raise Failure "Incorrect types for != " else Boolean
+		| Less -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for < " else Int
+		| Leq -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for <= " else Int
+		| Greater -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for > " else Int
+		| Geq -> if (t1 <> Int || t2 <> Int) then raise Failure "Incorrect types for >= " else Int
+		| Or -> if (t1 <> Boolean || t2 <> Boolean) then raise Failure "Incorrect types for | " else Boolean
+		| And -> if (t1 <> Boolean || t2 <> Boolean) then raise Failure "Incorrect types for & " else Boolean
+		| Not -> raise Failure "! is a unary operator."
+	in Sast.Binop(e1, op, e2), t
 
 let check_array_access (scope : symbol_table) a =
 	let (id, expr) = a in
+	let (decl, t) = check_id scope id in
 	let e1 = check_expr scope expr in
-	let t = check_id scope id in
-	if e1 <> Int then raise Failure "Array access must be integer." else t
+	let (_, t2) = e1 in
+	if t2 <> Int then raise Failure "Array access must be integer." else
+	Sast.ArrayAccess(decl, e1), t
 
 let check_assign (scope : symbol_table) a =
 	let (id, expr) = a in
-	let e1 = check_expr scope expr in
-	let t = check_id scope id in
-	if e1 <> t then raise Failure "Incorrect type assignment." else t
+	let (decl, t) = check_id scope id in
+	let e = check_expr scope expr in
+	let (_, t2) = e in
+	if t <> t2 then raise Failure "Incorrect type assignment." else Access(decl, e), t
 
 let check_call (scope : symbol_table) c =
 	let (id, el) = c in
@@ -199,15 +165,52 @@ let check_access (scope : symbol_table) a =
 	
 let check_uni_op (scope : symbol_table) uniop =
 	let (op, exp) = uniop in
-	let e = check_expr scope e in
 	match op with
-	Not -> if (e <> Boolean) then raise Failure "Incorrect types for ! " else Boolean
+	Not ->
+		let e = check_expr scope e in
+		let (_, t) = e in 
+		if (t <> Boolean) then raise Failure "Incorrect type for ! " else Sast.Uniop(op, e), Boolean
 	| _ -> raise Failure (e ^ " is not a unary operator")
+
+let rec check_expr (scope : symbol_table) expr = match expr with
+	Noexpr -> Sast.Noexpr, Void
+	| This -> Sast.This, Void
+	| Null -> sast.Null, Void
+	| Id(str) -> check_id scope str 
+	| Integer_literal(i) -> Sast.IntConst(i), Int
+	| String_literal(str) -> Sast.StrConst(str), String
+	| Boolean_literal(b) -> Sast.BoolConst(b), Boolean
+	| Array_access as a -> check_array_access scope a
+	| Assign as a -> check_assign scope a
+	| Uniop(op, expr) -> check_uni_op scope op
+	| Binop as b -> check_op scope b
+	| Call as c -> check_call scope c
+	| Access as a -> check_access scope a
 
 (* 
 let process_func_formals (env : translation_environment) f =
 	let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
 	let scope' = List.iter (fun var -> scope.variables:: head) *)
+
+let rec check_stmt (scope : symbol_table) stmt = match stmt with
+	Block(sl) -> List.fold_left ( fun a s -> a :: check_statement scope s ) [] sl
+	| Expr(e) -> check_expr scope e
+	| Return(e) -> check_expr scope e
+	| If(expr, stmt1, stmt2) -> 
+		let expr = check_expr scope expr in
+		let stmt1 = check_stmt scope stmt1 in
+		let stmt2 = check_stmt scope stmt2 in
+		Sast.If(expr, stmt1, stmt2)
+	| For(expr1, expr2, expr3, stmt) ->
+		let expr = check_expr scope expr in
+		let expr2 = check_expr scope expr2 in
+		let expr3 = check_expr scope expr3 in
+		let stmt = check_stmt scope stmt in
+		Sast.For(expr, expr2, expr3, stmt)
+	| While(expr, stmt) ->
+		let expr = check_expr scope expr in
+		let stmt = check_stmt scope stmt in
+		Sast.While(expr, stmt)
 
 let process_var_decl (scope : symbol_table) v =
 	let triple = match v with
@@ -232,7 +235,8 @@ let process_var_decl (scope : symbol_table) v =
 					with _ -> raise Failure "Not enough arguments or wrong type."
 				with Not_found -> raise Failure ("struct " ^ id ^ " not found")
 			| _ -> raise Failure "Not a struct"
-	in scope.variables <- scope.variables :: triple; Sast.variable_decl(triple)
+	in scope.variables <- scope.variables :: triple; (* Update the scope *)
+	Sast.variable_decl(triple)
 
 let process_func_decl (env : translation_environment) f =
 	try
@@ -240,28 +244,30 @@ let process_func_decl (env : translation_environment) f =
 			raise Failure ("Function already declared with name " ^ f.fname)
 	with Not_found ->
 		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
-		let scope' = List.fold_left process_var_decl scope' f.locals::f.formals in
-		let scope' = List.fold_left check_statement scope' f.body in
-		let scope' = { env.scope with functions = env.scope.functions :: f } in
-		{ env with scope = scope' }
+		List.iter process_var_decl scope' f.formals::f.locals in
+		let statments = List.fold_left (
+			fun a s -> a :: check_statement scope' s
+		) [] f.body in
+		env.scope.functions <- env.scope.functions :: f; (* throw away scope of function *)
+		{ f with body = statements }
 
 let process_assert (scope: symbol_table) a =
 	let (expr, stml) = a in
 	if check_expr expr <> Boolean then raise Failure "assert expr must be boolean " else
-	List.fold_left check_stmt stml
+	List.iter check_stmt stml
 
 let check_struct (scope : symbol_table) s =
-	let scope' = List.fold_left process_var_decl scope s.variable_decls in
-	List.fold_left process_assert scope' s.asserts
+	let scope' = { scope with parent = Some(scope); variables = [] } in
+	List.iter process_var_decl scope' s.variable_decls in
+	List.iter process_assert scope' s.asserts
 
 let process_struct_decl (env : translation_environment) s =
 	try
 		let _ = find_struct env.scope.structs s in
 			raise Failure ("struct already declared with name " ^ s.sname)
 	with Not_found ->
-		List.fold_left check_struct scope s in (* Throw away scope of the struct *)
-		let scope' = { env.scope with structs = env.scope.structs :: s } in
-		{ env with scope = scope' }
+		check_struct env.scope s;(* Throw away scope of the struct *)
+		env.scope.structs <- env.scope.structs :: s; s
 
 let process_global_decl (env : translation_environment) g =
 	try
@@ -290,8 +296,8 @@ let check_program p =
 		List.fold_left (
 			fun a global -> a :: process_global_decl env global
 		) [] vars in
-	let List.fold_left (
-			fun a global -> a :: process_func_decl env global
+	let funcs = List.fold_left (
+			fun a global -> a :: process_func_decl env funcs
 		) [] funcs in
 	try
 		List.find( fun (_, f, _, _) -> f == "main" ) env.scope.functions
