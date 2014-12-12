@@ -9,7 +9,7 @@ type function_table = {
 
 type symbol_table = {
 	mutable parent : symbol_table option;
-	mutable variables : (string * var_decl * var_types) list;
+	mutable variables : (string * checked_var_decl * var_types) list;
 	mutable functions : function_decl list;
 	mutable structs : struct_decl list;
 }
@@ -168,17 +168,20 @@ let rec check_stmt (scope : symbol_table) (stmt : Ast.stmt) = match stmt with
 		let stmt = check_stmt scope stmt in
 		Sast.While(expr, stmt)
 
-let process_var_decl (scope : symbol_table) v =
+let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 	let triple = match v with
-		Variable(t, name) -> (name, v, t)
-		| Variable_Initialization(t, name, expr) -> 
-			let (_, t2 ) = check_expr scope expr in
-			if t <> t2 then raise (Failure "wrong type") else (name, v, t) 
+		Variable(t, name) -> (name, Sast.Variable(t, name), t)
+		| Variable_Initialization(t, name, expr) ->
+			let expr = check_expr scope expr in
+			let (_, t2 ) = expr in
+			if t <> t2 then raise (Failure "wrong type") else (name, Sast.Variable_Initialization(t, name, expr), t) 
 		| Array_Initialization(t, name, el) ->
-			(try 
-				let _ = List.find (fun elem -> let (_, t2 ) = check_expr scope elem in t <> t2) el 
-				in raise (Failure "wrong type")
-			with Not_found -> (name, v, t))
+			let el = List.fold_left (
+				fun a elem ->
+				let expr = check_expr scope elem in 
+				let (_, t2 ) = expr in 
+				if t <> t2 then raise (Failure "wrong type") else expr :: a
+			) [] el in (name, Sast.Array_Initialization(t, name, el), t)
 		| Struct_Initialization(t, name, el) -> 
 			(
 				match t with
@@ -197,7 +200,7 @@ let process_var_decl (scope : symbol_table) v =
 									let e = check_expr scope c in
 									let (_, t2) = e in
 									if t <> t2 then raise (Failure "types are not the same") else e :: a
-								) [] s.variable_decls el in (name, v, t)
+								) [] s.variable_decls el in (name, Sast.Struct_Initialization(t, name, el), t)
 							with _ -> raise (Failure ("struct " ^ id ^ " not found"))
 						)
 					| _ -> raise (Failure "Not a struct")
@@ -215,8 +218,8 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
 		let formals = List.fold_left (
 			fun a f -> match f with
-				 Variable(t, n) -> scope'.variables <- (n, f, t) :: scope'.variables; (f, t) :: a
-				 | _ -> raise (Failure "formal can only be of form <type> <id>")
+			Ast.Variable(t, n) -> scope'.variables <- (n, Sast.Variable(t, n), t) :: scope'.variables; (Sast.Variable(t, n), t) :: a
+			| _ -> raise (Failure "formal can only be of form <type> <id>")
 		) [] f.formals in
 		let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
 		let statements = List.fold_left (
@@ -251,7 +254,7 @@ let process_struct_decl (env : translation_environment) (s : Ast.struct_decl) =
 		let s = { sname = s.sname; variable_decls = vars; asserts = asserts; } in 
 		env.scope.structs <- s :: env.scope.structs; s
 
-let process_global_decl (env : translation_environment) g =
+let process_global_decl (env : translation_environment) (g : Ast.var_decl) =
 	try
 		let name = match g with
 			Variable(_, id) -> id
