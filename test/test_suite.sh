@@ -1,7 +1,7 @@
 #/bin/bash
 echo "-----------------------------------------"
 echo "-----------------------------------------"
-echo "-----------------BEGIN-------------------"
+echo "----------BEGIN PRETTY PRINT-------------"
 echo "-----------------------------------------"
 echo "-----------------------------------------"
 
@@ -13,6 +13,20 @@ if make pretty
 		for filename in *.k; do
 			.././pretty < "$filename" > "output_$filename"
 			python test_logic.py "$filename" "output_$filename"
+		done
+else
+	exit
+fi
+if make
+	then
+		cd test/
+		echo "-----------------------------------------"
+		echo "-----------------------------------------"
+		echo "-----------BEGIN SEMANTIC CHK------------"
+		echo "-----------------------------------------"
+		echo "-----------------------------------------"
+		for filename in *.k; do
+			.././semantic < "$filename" > "output_$filename"
 		done
 		echo "-----------------------------------------"
 		echo "-----------------------------------------"
