@@ -1,11 +1,5 @@
 open Ast
 
-(*
-TODO
-
-Add definition of struct to SAST
-*)
-
 
 type checked_var_decl =
 	Variable of var_types * string
