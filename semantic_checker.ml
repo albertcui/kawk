@@ -8,14 +8,14 @@ type function_table = {
 }
 
 type symbol_table = {
-	parent : symbol_table option;
-	variables : (string * var_decl * var_types) list;
-	functions : function_decl list;
-	structs : struct_decl list;
+	mutable parent : symbol_table option;
+	mutable variables : (string * var_decl * var_types) list;
+	mutable functions : function_decl list;
+	mutable structs : struct_decl list;
 }
 
 type translation_environment = {
-	scope : symbol_table (* symbol table for vars *)
+	mutable scope : symbol_table (* symbol table for vars *)
 	(* return_type : var_types Function’s return type *)
 }
 
@@ -103,7 +103,7 @@ and check_call (scope : symbol_table) c = match c with
 						if t <> t2
 						then raise (Failure "wrong type")
 						else expr :: a
-				) [] f.formals el in
+				) [] f.checked_formals el in
 			Sast.Call(f, exprs), f.ftype
 		with Not_found -> raise (Failure ("Function already declared with name " ^ id)))
 	| _ -> raise (Failure "Not a call")	
@@ -115,12 +115,13 @@ and check_access (scope : symbol_table) a = match a with
 				(try
 					let s = find_struct scope.structs id in
 					let var = List.find (
-						fun v -> match v with
+						fun (t, _) -> match t with
 						Variable(_, n) -> n = id
 						| Variable_Initialization(_, n, _) -> n = id
 						| Array_Initialization(_, n, _) -> n = id
 						| Struct_Initialization(_, n, _) -> n = id
-					) s.variable_decls in 
+					) s.variable_decls in
+					let (var, _) = var in 
 					let t = match var with
 						Variable(t, _) -> t
 						| Variable_Initialization(t, _, _) -> t
@@ -161,7 +162,7 @@ let rec check_stmt (scope : symbol_table) (stmt : Ast.stmt) = match stmt with
 		let expr2 = check_expr scope expr2 in
 		let expr3 = check_expr scope expr3 in
 		let stmt = check_stmt scope stmt in
-		Sast.For(expr, expr, expr, stmt)
+		Sast.For(expr, expr2, expr3, stmt)
 	| While(expr, stmt) ->
 		let expr = check_expr scope expr in
 		let stmt = check_stmt scope stmt in
@@ -186,90 +187,100 @@ let process_var_decl (scope : symbol_table) v =
 							try
 								let s = find_struct scope.structs id in
 								(* DO NOT THROW AWAY RESPONSE`*)
-								let _ = List.iter2 (
-									fun a b -> let t = match a with
+								let el = List.fold_left2 (
+									fun a b c -> let t = 
+									let (b, _ ) = b in match b with
 									Variable(t, _) -> t
 									| Variable_Initialization(t, _, _) -> t
 									| Array_Initialization(t, _, _) -> t
 									| Struct_Initialization(t, _, _) -> t in
-									let e = check_expr scope b in
+									let e = check_expr scope c in
 									let (_, t2) = e in
-									if t <> t2 then raise (Failure "types are not the same") else 
-								) s.variable_decls el in (name, v, t)
+									if t <> t2 then raise (Failure "types are not the same") else e :: a
+								) [] s.variable_decls el in (name, v, t)
 							with _ -> raise (Failure ("struct " ^ id ^ " not found"))
 						)
 					| _ -> raise (Failure "Not a struct")
-			)
-	in scope.variables <- scope.variables :: triple; (* Update the scope *)
-	Sast.variable_decl(triple)
+			) in
+	let (_, decl, t) = triple in
+	scope.variables <- triple :: scope.variables; (* Update the scope *)
+	(decl, t)
 
-let process_func_decl (env : translation_environment) f =
+(* TODO check if function return is of same type as type declared *)
+let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	try
 		let _ = find_func env.scope.functions f.fname in
-			raise Failure ("Function already declared with name " ^ f.fname)
+			raise (Failure ("Function already declared with name " ^ f.fname))
 	with Not_found ->
 		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
-		let _ = List.iter process_var_decl scope' f.formals::f.locals in
-		(* should we keep result of process_var_decl? *)
-		let statments = List.fold_left (
-			fun a s -> a :: check_statement scope' s
+		let formals = List.fold_left (
+			fun a f -> match f with
+				 Variable(t, n) -> scope'.variables <- (n, f, t) :: scope'.variables; (f, t) :: a
+				 | _ -> raise (Failure "formal can only be of form <type> <id>")
+		) [] f.formals in
+		let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
+		let statements = List.fold_left (
+			fun a s -> check_stmt scope' s :: a
 		) [] f.body in
-		env.scope.functions <- env.scope.functions :: f; (* throw away scope of function *)
-		{ f with body = statements }
-
+		let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements } in
+		env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *)
+		f
+		
 let process_assert (scope: symbol_table) a =
 	let (expr, stml) = a in
-	if check_expr expr <> Boolean then raise Failure "assert expr must be boolean " else
-	List.iter check_stmt stml
+	let expr  = check_expr scope expr in
+	let (_, t) = expr in
+	if t <> Boolean then (raise (Failure "assert expr must be boolean")) else
+	let stml = List.fold_left ( fun a s -> check_stmt scope s :: a) [] stml in
+	(expr, stml)
 
-let check_struct (scope : symbol_table) s =
+(* let check_struct (scope : symbol_table) s =
 	let scope' = { scope with parent = Some(scope); variables = [] } in
-	let _ = List.iter process_var_decl scope' s.variable_decls in
+	let vars = List.fold_left ( fun a s -> process_var_decl scope' :: a) [] s.variable_decls in
 	(* should we keep result of process_var_decl? *)
-	List.iter process_assert scope' s.asserts
+	List.iter process_assert scope' s.asserts *)
 
-let process_struct_decl (env : translation_environment) s =
+let process_struct_decl (env : translation_environment) (s : Ast.struct_decl) =
 	try
 		let _ = find_struct env.scope.structs s.sname in
-			raise Failure ("struct already declared with name " ^ s.sname)
+			raise (Failure ("struct already declared with name " ^ s.sname))
 	with Not_found ->
-		check_struct env.scope s;(* Throw away scope of the struct *)
-		env.scope.structs <- env.scope.structs :: s; s
+		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
+		let vars = List.fold_left ( fun a v -> process_var_decl scope' v :: a ) [] s.variable_decls in
+		let asserts = List.fold_left ( fun a asrt -> process_assert scope' asrt :: a ) [] s.asserts in
+		let s = { sname = s.sname; variable_decls = vars; asserts = asserts; } in 
+		env.scope.structs <- s :: env.scope.structs; s
 
 let process_global_decl (env : translation_environment) g =
 	try
-		let _ = check_id env.scope g in
-			let name = match g with
-				Variable(_, id) -> id
-				| Variable_Initialization(_, id, _) -> id
-				| Array_Initialization(_, id, _) -> id
-				| Struct_Initialization(_, id, _) -> id
-			in raise Failure ("Variable already declared with name " ^ name)
+		let name = match g with
+			Variable(_, id) -> id
+			| Variable_Initialization(_, id, _) -> id
+			| Array_Initialization(_, id, _) -> id
+			| Struct_Initialization(_, id, _) -> id in
+		let _ = check_id env.scope name in
+		raise (Failure ("Variable already declared with name " ^ name))
 	with Not_found -> process_var_decl env.scope g
-(* 		let scope' = { env.scope with parent = Some(env.scope); variables = env.scope.variables::g } in
-		let scope' = { env.scope with functions = env.scope.functions :: f } in
-		{ env with scope = scope' }
- *)
 
-let check_program p =
+let check_program (p : Ast.program) =
 	let s = { parent = None; variables = []; functions = []; structs = [] } in
 	let env = { scope = s } in
 	let (structs, vars, funcs) = p in 	
 	let structs = 
 		List.fold_left (
-			fun a s -> a :: process_struct_decl env s
+			fun a s -> process_struct_decl env s :: a
 		) [] structs in
 	let globals =
 		List.fold_left (
-			fun a g -> a :: process_global_decl env g
+			fun a g -> process_global_decl env g :: a
 		) [] vars in
 	let funcs = List.fold_left (
-			fun a f -> a :: process_func_decl env f
+			fun a f -> process_func_decl env f :: a
 		) [] funcs in
 	try
-		let _ = List.find( fun (_, f, _, _) -> f == "main" ) env.scope.functions in
+		let _ = List.find( fun f -> f.fname == "main" ) env.scope.functions in
 		structs, globals, funcs
-	with Not_found -> raise Failure "No main function defined."
+	with Not_found -> raise (Failure "No main function defined.")
 
 let print_position outx lexbuf =
   let pos = lexbuf.lex_curr_p in
