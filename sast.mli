@@ -7,9 +7,13 @@ Add definition of struct to SAST
 *)
 
 
-type variable_decl = var_decl * var_types
-
-type function_decl = {
+type checked_var_decl =
+	Variable of var_types * string
+	| Variable_Initialization of var_types * string * expression
+	| Array_Initialization of var_types * string * expression list
+	| Struct_Initialization of var_types * string * expression list
+and variable_decl = checked_var_decl * var_types
+and function_decl = {
 	ftype: var_types;
 	fname : string; (* Name of the function *)
 	checked_formals : variable_decl list; (* Formal argument names *)
@@ -28,13 +32,13 @@ and expr_detail =
 	| IntConst of int
 	| StrConst of string
 	| BoolConst of bool
-	| ArrayAccess of var_decl * expression
-	| Id of var_decl
+	| ArrayAccess of checked_var_decl * expression
+	| Id of checked_var_decl
 	| Call of function_decl * expression list
-	| Access of struct_decl * var_decl
+	| Access of struct_decl * checked_var_decl
 	| Uniop of op * expression
 	| Binop of expression * op * expression
-	| Assign of var_decl * expression
+	| Assign of checked_var_decl * expression
 and expression = expr_detail * var_types
 and stmt = 
 	Block of stmt list (* { ... } *)
