@@ -8,14 +8,6 @@ Add definition of struct to SAST
 
 type variable_decl = var_decl * var_types
 
-type function_decl = {
-	ftype: var_types;
-	fname : string; (* Name of the function *)
-	formals : variable_decl list; (* Formal argument names *)
-	locals : variable_decl list; (* Locally defined variables *)
-	body : stmt list;
-}
-
 type expr_detail =
 	Noexpr
 	| This
@@ -39,5 +31,19 @@ type stmt =
 	| If of expression * stmt * stmt (* if (foo == 42) {} else {} *)
 	| For of expression * expression * expression * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 	| While of expression * stmt
+
+type function_decl = {
+	ftype: var_types;
+	fname : string; (* Name of the function *)
+	formals : variable_decl list; (* Formal argument names *)
+	locals : variable_decl list; (* Locally defined variables *)
+	body : stmt list;
+}
+
+type struct_decl = {
+	sname: string; (* Name of the struct *)
+	variable_decls: variable_decls list; (* int foo *)
+	asserts: (expression * stmt list) list; (* @ (bar > 1) { ... } *)
+}
 
 type program = struct_decl list * variable_decl list * function_decl list
