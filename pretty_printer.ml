@@ -91,10 +91,10 @@ let print_struct_decl s =
 	print_string "}"
 	
 let print_unit_decl = function
-	Local_a_udecl(udecl_params, udecl_check_val) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
-	| Local_r_udecl(udecl_params, udecl_check_val) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
-	| Outer_a_udecl(str, udecl_params, udecl_check_val) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
-	| Outer_r_udecl(str, udecl_params, udecl_check_val) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
+	Local_udecl(udecl_params, udecl_check_val, true) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
+	| Local_udecl(udecl_params, udecl_check_val, false) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
+	| Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
+	| Outer_udecl(str, udecl_params, udecl_check_val, false) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
 
 let print_param = function
 	Param(var_types, str) -> print_var_types var_types; print_string (str)
@@ -116,10 +116,11 @@ let print_func_decl f =
 	print_string "}\n"
 
 let print_program p = 
-	let (structs, vars, funcs) = p in 	
+	let (structs, vars, funcs, unts) = p in 	
 		List.iter print_struct_decl structs;
 		List.iter print_var_decl vars;
-		List.iter print_func_decl (List.rev funcs)
+		List.iter print_func_decl (List.rev funcs);
+		List.iter print_unit_decl unts 
 
 let print_position outx lexbuf =
   let pos = lexbuf.lex_curr_p in

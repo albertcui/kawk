@@ -20,6 +20,9 @@ and function_decl = {
 	checked_locals : variable_decl list; (* Locally defined variables *)
 	checked_body : stmt list;
 }
+and unit_decl = 
+	Local_udecl of expr list * expr * bool
+	| Outer_udecl of string * expr list * expr * bool
 and struct_decl = {
 	sname: string; (* Name of the struct *)
 	variable_decls: variable_decl list; (* int foo *)
@@ -48,4 +51,4 @@ and stmt =
 	| For of expression * expression * expression * stmt (* for (i=0;i<10;i=i+1) { ... } *)
 	| While of expression * stmt
 
-type program = struct_decl list * variable_decl list * function_decl list
+type program = struct_decl list * variable_decl list * function_decl list * unit_decl list

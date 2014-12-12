@@ -47,10 +47,8 @@ type struct_decl = {
 }
 
 type unit_decl =
-	Local_a_udecl of expr list * expr
-	| Local_r_udecl of expr list * expr
-	| Outer_a_udecl of string * expr list * expr
-	| Outer_r_udecl of string * expr list * expr
+	Local_udecl of expr list * expr * bool
+	| Outer_udecl of string * expr list * expr * bool
 
 type func_decl = {
 	ftype: var_types;
@@ -61,4 +59,4 @@ type func_decl = {
 	units : unit_decl list; (* Series of unit tests *)
 }
 
-type program = struct_decl list * var_decl list * func_decl list (* global vars, funcs *)
+type program = struct_decl list * var_decl list * func_decl list * unit_decl list (* global vars, funcs *)

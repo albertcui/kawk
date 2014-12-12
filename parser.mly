@@ -29,10 +29,11 @@
 %%
 
 program:
-	/* nothing */ 	{ [], [], [] }
-	| program sdecl { let (str, var, func) = $1 in $2::str, var, func }
-	| program vdecl { let (str, var, func) = $1 in str, $2::var, func } /* int world = 4; */
-	| program fdecl { let (str, var, func) = $1 in str, var, $2::func }
+	/* nothing */ 	{ [], [], [], [] }
+	| program sdecl { let (str, var, func, unt) = $1 in $2::str, var, func, unt }
+	| program vdecl { let (str, var, func, unt) = $1 in str, $2::var, func, unt } /* int world = 4; */
+	| program fdecl { let (str, var, func, unt) = $1 in str, var, $2::func, unt }
+	| program udecl { let (str, var, func, unt) = $1 in str, var, func, $2::unt }
 
 fdecl:
 	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list udecl_list RBRACE
@@ -69,10 +70,10 @@ udecl_list:
 	| udecl_list udecl 	{ $2 :: $1 }
 
 udecl:
-	UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { Local_a_udecl($3, $8) }
-	| UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { Local_r_udecl($3, $8) }
-	| UNIT COLON ID LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { Outer_a_udecl($3, $5, $10) }
-	| UNIT COLON ID LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { Outer_r_udecl($3, $5, $10) }
+	UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { Local_udecl($3, $8, true) }
+	| UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { Local_udecl($3, $8, false) }
+	| UNIT COLON ID LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { Outer_udecl($3, $5, $10, true) }
+	| UNIT COLON ID LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { Outer_udecl($3, $5, $10, false) }
 
 /* ------------- end udecl stuff --------------*/
 
