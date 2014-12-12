@@ -1,3 +1,5 @@
+type j_variable_decl = variable_decl * var_decl * var_types
+
 type struct_decl = {
 	sname: string; (* Name of the struct *)
 	variable_decls: variable_decls list; (* int foo *)
