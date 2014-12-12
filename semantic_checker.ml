@@ -209,7 +209,42 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 	scope.variables <- triple :: scope.variables; (* Update the scope *)
 	(decl, t)
 
-(* TODO check if function return is of same type as type declared *)
+let rec check_func_stmt (scope : symbol_table) (stml : Sast.stmt list) (ftype : Ast.var_types) = 
+	List.iter (
+		fun s -> match s with 
+		Sast.Block (sl) ->
+			check_func_stmt scope sl ftype
+		| Sast.Return(e) -> 
+			let (_, t) = e in 
+			if t <> ftype then raise (Failure "return type is incorrect") else ()
+		| Sast.If(_, s1, s2) -> 
+			check_func_stmt scope [s1] ftype; check_func_stmt scope [s2] ftype
+		| Sast.For(_, _, _, s) ->
+			check_func_stmt scope [s] ftype
+		| Sast.While(_, s) ->
+			check_func_stmt scope [s] ftype
+		| _ -> ()
+	) stml
+
+let process_func_stmt (scope : symbol_table) (stml : Ast.stmt list) (ftype : Ast.var_types) = 
+	List.fold_left (
+		fun a s -> let stmt = check_stmt scope s in
+		match stmt with 
+		Sast.Block (sl) ->
+			check_func_stmt scope sl ftype; stmt :: a
+		| Sast.Return(e) -> 
+			let (_, t) = e in 
+			if t <> ftype then raise (Failure "return type is incorrect") else
+			stmt :: a 
+		| Sast.If(_, s1, s2) -> 
+			check_func_stmt scope [s1] ftype; check_func_stmt scope [s2] ftype; stmt :: a
+		| Sast.For(_, _, _, s) ->
+			check_func_stmt scope [s] ftype; stmt :: a
+		| Sast.While(_, s) ->
+			check_func_stmt scope [s] ftype; stmt :: a
+		| _ -> stmt :: a
+	) [] stml
+
 let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	try
 		let _ = find_func env.scope.functions f.fname in
@@ -222,9 +257,7 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 			| _ -> raise (Failure "formal can only be of form <type> <id>")
 		) [] f.formals in
 		let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
-		let statements = List.fold_left (
-			fun a s -> check_stmt scope' s :: a
-		) [] f.body in
+		let statements = process_func_stmt scope' f.body f.ftype in 
 		let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements } in
 		env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *)
 		f
