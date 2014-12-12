@@ -218,8 +218,7 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
 		let formals = List.fold_left (
 			fun a f -> match f with
-			Ast.Variable(t, n) -> scope'.variables <- (n, Sast.Variable(t, n), t) :: scope'.variables; (Sast.Variable(t, n), t) :: a
-			| _ -> raise (Failure "formal can only be of form <type> <id>")
+			Ast.Param(t, n) -> scope'.variables <- (n, Sast.Variable(t, n), t) :: scope'.variables; (Sast.Variable(t, n), t) :: a
 		) [] f.formals in
 		let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
 		let statements = List.fold_left (
