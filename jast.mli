@@ -1,8 +1,11 @@
-type j_variable_decl = variable_decl * var_decl * var_types
+open Sast
+
+
+type j_variable_decl = variable_decl * bool
 
 type struct_decl = {
 	sname: string; (* Name of the struct *)
-	variable_decls: variable_decls list; (* int foo *)
+	variable_decls: j_variable_decls list; (* int foo *)
 	asserts: (expression * stmt list) list; (* @ (bar > 1) { ... } *)
 }
 
