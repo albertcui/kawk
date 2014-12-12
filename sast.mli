@@ -13,10 +13,11 @@ and function_decl = {
 	checked_formals : variable_decl list; (* Formal argument names *)
 	checked_locals : variable_decl list; (* Locally defined variables *)
 	checked_body : stmt list;
+	checked_units : unit_decl list;
 }
 and unit_decl = 
-	Local_udecl of expr list * expr * bool
-	| Outer_udecl of string * expr list * expr * bool
+	Local_udecl of expression list * expression * bool
+	| Outer_udecl of function_decl * expression list * expression * bool
 and struct_decl = {
 	sname: string; (* Name of the struct *)
 	variable_decls: variable_decl list; (* int foo *)
