@@ -7,7 +7,7 @@ echo "-----------------------------------------"
 
 cd ../
 make clean
-if make
+if make pretty
 	then
 		cd test/
 		for filename in *.k; do
