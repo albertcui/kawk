@@ -1,3 +1,4 @@
+REJECT
 int main(){
 	int a;
 	/* comment, lol */

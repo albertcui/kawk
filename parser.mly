@@ -1,8 +1,9 @@
 %{ open Ast %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA PLUS MINUS TIMES DIVIDE MOD
-%token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL STRING INT EOF OR AND NOT
-%token ACCESS STRUCT ASSERT THIS NULL VOID
+%token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA
+%token MINUS TIMES DIVIDE MOD STRING INT EOF OR AND NOT PLUS
+%token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL
+%token ACCESS STRUCT ASSERT UNIT THIS NULL VOID EQUALS ACCEPT REJECT
 %token <string> ID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL
@@ -28,36 +29,53 @@
 %%
 
 program:
-	/* nothing */ 	{ [], [], [] }
-	| program sdecl { let (str, var, func) = $1 in $2::str, var, func }
-	| program vdecl { let (str, var, func) = $1 in str, $2::var, func } /* int world = 4; */
-	| program fdecl { let (str, var, func) = $1 in str, var, $2::func }
-	
+	/* nothing */ 	{ [], [], [], [] }
+	| program sdecl { let (str, var, func, unt) = $1 in $2::str, var, func, unt }
+	| program vdecl { let (str, var, func, unt) = $1 in str, $2::var, func, unt } /* int world = 4; */
+	| program fdecl { let (str, var, func, unt) = $1 in str, var, $2::func, unt }
+	| program udecl { let (str, var, func, unt) = $1 in str, var, func, $2::unt }
+
 fdecl:
-	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list udecl_list RBRACE
 	{ { ftype   = $1;
 		fname   = $2;
 		formals = $4;
 		locals  = List.rev $7;
-		body    = List.rev $8 } }
+		body    = List.rev $8;
+		units 	= List.rev $9; } }
 
 formals_opt:
 	/* nothing */		{ [] }
 	| formal_list		{ List.rev $1 }
 
 formal_list: 
-	the_type ID 			{ [Variable($1, $2)] }
-	| formal_list COMMA the_type ID 	{ Variable($3, $4) :: $1 }
+	the_type ID 			{ [Param($1, $2)] }
+	| formal_list COMMA the_type ID 	{ Param($3, $4) :: $1 }
 
 vdecl_list:
 	/* nothing */		{ [] }
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	the_type ID LBRACK RBRACK ASSIGN LBRACE expr_list RBRACE SEMI { Array_Initialization($1, $2, List.rev $7) }
+	the_type LBRACK RBRACK ID ASSIGN LBRACE expr_list RBRACE SEMI { Array_Initialization($1, $4, List.rev $7) }
 	| the_type ID SEMI { Variable($1, $2) }
 	| the_type ID ASSIGN expr SEMI { Variable_Initialization($1, $2, $4) }
 	| the_type ID ASSIGN LBRACE expr_list RBRACE SEMI { Struct_Initialization($1, $2, List.rev $5) }
+
+/* ------------- udecl stuff --------------*/
+
+
+udecl_list:
+	/* nothing */		{ [] }
+	| udecl_list udecl 	{ $2 :: $1 }
+
+udecl:
+	UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { Local_udecl($3, $8, true) }
+	| UNIT LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { Local_udecl($3, $8, false) }
+	| UNIT COLON ID LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON ACCEPT SEMI { Outer_udecl($3, $5, $10, true) }
+	| UNIT COLON ID LPAREN actuals_opt RPAREN COLON EQUALS LPAREN expr RPAREN COLON REJECT SEMI { Outer_udecl($3, $5, $10, false) }
+
+/* ------------- end udecl stuff --------------*/
 
 assert_list:
 	/* nothing */ { [] }
@@ -69,6 +87,7 @@ asrt:
 expr_list:
 	expr { [$1] }
 	| expr_list SEMI expr { $3 :: $1 }
+	| expr_list COMMA expr { $3 :: $1 } /*will this work for udecl? */
 
 sdecl:
 	STRUCT ID LBRACE vdecl_list assert_list RBRACE
