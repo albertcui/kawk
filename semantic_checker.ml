@@ -297,7 +297,6 @@ let process_global_decl (env : translation_environment) (g : Ast.var_decl) =
 		let _ = check_id env.scope name in
 		raise (Failure ("Variable already declared with name " ^ name))
 	with Not_found -> process_var_decl env.scope g
-
 let check_program (p : Ast.program) =
 	let s = { parent = None; variables = []; functions = []; structs = [] } in
 	let env = { scope = s } in
