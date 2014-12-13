@@ -8,20 +8,31 @@ let find_decl (var_decl : Sast.checked_var_decl) (var_list : Jast.j_var_struct_d
 	List.find (fun v -> let (v, _) = v.the_variable in v = var_decl) var_list
 
 let rec check_assert_expr a (e : Sast.expression) (var_list : Jast.j_var_struct_decl list) =
-	let (expr_detail, _) = e in 
-	let Some(var) = match expr_detail with
-		ArrayAccess(var, expr) ->  check_assert_expr a expr var_list; Some(var) 
-		| Id(var) -> Some(var)
-		| Call(_, expr_list) -> List.iter (fun e -> check_assert_expr a e var_list) expr_list; ()
-		| Access(_, var) -> Some(var)
-		| Uniop (_, expr) -> check_assert a expr var_list; ()
-		| Binop (expr1, _, expr2) -> check_assert a expr1 var_list; check_assert a expr2 var_list; ()
-		| Assign (var, expr) -> check_assert_expr a expr var_list; var
-		| _ -> () in
-	if var <> () then let j_var = find_decl var var_list in 
-		(if List.find(fun a -> other_assert = a) then 
-		j_var.asserts <- a :: j_var.asserts else ())
-	else ()
+	let (expr_detail, _) = e in match expr_detail with
+		ArrayAccess(var, expr) ->  check_assert_expr a expr var_list; 
+			(let j_var = find_decl var var_list in 
+			try
+				List.find(fun other_assert -> other_assert = a) j_var.asserts
+			with Not_found -> j_var.asserts <- a :: j_var.asserts)
+		| Id(var) -> 
+			(let j_var = find_decl var var_list in 
+			try
+				List.find(fun other_assert -> other_assert = a) j_var.asserts
+			with Not_found -> j_var.asserts <- a :: j_var.asserts)	
+		| Call(_, expr_list) -> List.iter (fun e -> check_assert_expr a e var_list) expr_list
+		| Access(_, var) -> 
+			(let j_var = find_decl var var_list in 
+			try
+				List.find(fun other_assert -> other_assert = a) j_var.asserts
+			with Not_found -> j_var.asserts <- a :: j_var.asserts)		
+		| Uniop (_, expr) -> check_assert a expr var_list
+		| Binop (expr1, _, expr2) -> check_assert a expr1 var_list; check_assert a expr2 var_list
+		| Assign (var, expr) -> check_assert_expr a expr var_list;
+			(let j_var = find_decl var var_list in 
+			try
+				List.find(fun other_assert -> other_assert = a) j_var.asserts
+			with Not_found -> j_var.asserts <- a :: j_var.asserts)		
+		| _ -> ()
 
 
 let rec check_assert a (var_list : Jast.j_var_struct_decl list) =
