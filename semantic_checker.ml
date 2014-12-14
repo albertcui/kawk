@@ -397,7 +397,7 @@ let check_program (p : Ast.program) =
 	let funcs = 
 		List.fold_left (
 			fun a f -> process_func_decl env f :: a
-		) [] funcs in
+		) [] (List.rev funcs) in
 	let units = 
 		List.fold_left (
 			fun a u -> process_outer_unit_decl env u :: a
