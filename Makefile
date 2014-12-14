@@ -37,4 +37,4 @@ pretty_printer:
 
 clean: 
 	rm -f test/output*.k
-	rm -f semantic pretty *.cmo *.cmi *~ parser.mli parser.ml scanner.ml
+	rm -f semantic pretty sast_to_jast *.cmo *.cmi *~ parser.mli parser.ml scanner.ml
