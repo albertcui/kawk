@@ -19,6 +19,15 @@ type translation_environment = {
 	(* return_type : var_types Function’s return type *)
 }
 
+let the_print_function = {
+	ftype = Ast.Void;
+	fname = "print"; 
+	checked_formals = [];
+	checked_locals = [];
+	checked_body = [];
+	checked_units = []
+}
+
 let find_struct (s : struct_decl list) stru =
 	List.find(fun c -> c.sname = stru) s
 
@@ -105,13 +114,19 @@ and check_call (scope : symbol_table) c = match c with
 						else expr :: a
 				) [] f.checked_formals el in
 			Sast.Call(f, exprs), f.ftype
-		with Not_found -> raise (Failure ("Function already declared with name " ^ id)))
+		with Not_found ->
+			if id = "print" then match el with
+				| hd :: []-> let expr = check_expr scope hd in
+					let (_, t) = expr in
+					if t = String then Sast.Call(the_print_function, [expr]), Ast.Void else raise (Failure "Print takes only type string")
+				| _ -> raise (Failure "Print only takes one argument")  
+			else raise (Failure ("Function not found with name " ^ id)))
 	| _ -> raise (Failure "Not a call")	
 
 and check_access (scope : symbol_table) a = match a with
 	Ast.Access(id, id2) ->
 		(let (_, t) = check_id scope id in match t with
-			Struct(id) -> 
+			Struct(id) ->
 				(try
 					let s = find_struct scope.structs id in
 					let var = List.find (
