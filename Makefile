@@ -9,17 +9,17 @@ pretty: scanner parser pretty_printer
 semantic: scanner parser semantic_checker
 	ocamlc -o semantic parser.cmo scanner.cmo semantic_checker.cmo
 
+sast_to_jast: jast 
+	ocamlc -c sast_to_jast.ml 
+
+semantic_checker: sast scanner
+	ocamlc -c semantic_checker.ml
+
 scanner: parser
 	ocamllex scanner.mll; ocamlc -c scanner.ml
 
 parser: ast
 	ocamlyacc parser.mly; ocamlc -c parser.mli; ocamlc -c parser.ml
-
-sast_to_jast: jast 
-	ocamlc -c sast_to_jast.ml 
-
-semantic_checker: sast
-	ocamlc -c semantic_checker.ml
 
 jast: sast ast
 	ocamlc -c jast.mli
