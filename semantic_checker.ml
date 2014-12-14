@@ -3,6 +3,9 @@ open Sast
 open Lexing
 open Map
 
+(* check return exists *)
+(* have to reverse lists lololol *)
+
 type function_table = {
 	funcs : func_decl list
 }
@@ -36,17 +39,23 @@ let find_func (l : function_decl list) f =
 
 let rec check_id (scope : symbol_table) id =
 	try
+		let _ = print_string ("check_id called, legnth of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in
+		let _ = List.iter (fun (n, _, _) -> print_string ("try printing in check_id: " ^ n ^ "\n")) scope.variables in
 		let (_, decl, t) = List.find(fun (n, _, _) -> n = id ) scope.variables in
 		decl, t
 	with Not_found -> match scope.parent with
 		Some(parent) -> check_id parent id
 		| _ -> raise Not_found
  
- let rec check_expr (scope : symbol_table) (expr : Ast.expr) = match expr with
+ let rec check_expr (scope : symbol_table) (expr : Ast.expr) =
+ 	let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in match expr with
 	Noexpr -> Sast.Noexpr, Void
 	| This -> Sast.This, Void
-	| Null -> Sast.Null, Void
-	| Id(str) -> let (decl, t) = check_id scope str in Sast.Id(decl), t 
+	| Null -> Sast.Null, Void 
+	| Id(str) -> 
+		(try 
+			let (decl, t) = check_id scope str in Sast.Id(decl), t 
+		with Not_found -> raise (Failure ("Id named " ^ str ^ " not found")))
 	| Integer_literal(i) -> Sast.IntConst(i), Int
 	| String_literal(str) -> Sast.StrConst(str), String
 	| Boolean_literal(b) -> Sast.BoolConst(b), Boolean
@@ -184,6 +193,7 @@ let rec check_stmt (scope : symbol_table) (stmt : Ast.stmt) = match stmt with
 		Sast.While(expr, stmt)
 
 let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
+	let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in
 	let triple = match v with
 		Variable(t, name) -> (name, Sast.Variable(t, name), t)
 		| Variable_Initialization(t, name, expr) ->
@@ -221,7 +231,7 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 					| _ -> raise (Failure "Not a struct")
 			) in
 	let (_, decl, t) = triple in
-	scope.variables <- triple :: scope.variables; (* Update the scope *)
+	scope.variables <- triple :: scope.variables; List.iter (fun (n, _, _) -> print_string ("try printing in process_var_decl:" ^ n ^ "\n")) scope.variables; (* Update the scope *)
 	(decl, t)
 
 let rec check_func_stmt (scope : symbol_table) (stml : Sast.stmt list) (ftype : Ast.var_types) = 
@@ -299,7 +309,7 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 			raise (Failure ("Function already declared with name " ^ f.fname))
 	with Not_found ->
 		if f.fname = "print" then raise (Failure "A function cannot be named 'print'")
-		else
+		else (
 			let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
 			let formals = List.fold_left (
 				fun a f -> match f with
@@ -311,7 +321,8 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 			let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
 			env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *)
 			f
-		
+		)
+
 let process_assert (scope: symbol_table) a =
 	let (expr, stml) = a in
 	let expr  = check_expr scope expr in
@@ -346,7 +357,9 @@ let process_global_decl (env : translation_environment) (g : Ast.var_decl) =
 			| Struct_Initialization(_, id, _) -> id in
 		let _ = check_id env.scope name in
 		raise (Failure ("Variable already declared with name " ^ name))
-	with Not_found -> process_var_decl env.scope g
+	with Not_found -> 
+		let _ = print_string ("p_global_decl called, this id not found, legnth of env.scope.variables is " ^ string_of_int (List.length env.scope.variables) ^ "\n") in
+		process_var_decl env.scope g
 
 let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) = match u with
 	Local_udecl (el, _, _) ->  raise (Failure "Can not define unit of this type in global scope ")
@@ -379,15 +392,16 @@ let check_program (p : Ast.program) =
 	let globals =
 		List.fold_left (
 			fun a g -> process_global_decl env g :: a
-		) [] vars in
+		) [] (List.rev vars) in
 	let funcs = List.fold_left (
 			fun a f -> process_func_decl env f :: a
 		) [] funcs in
 	let units = List.fold_left (
-		fun a u -> process_outer_unit_decl env u :: a
-	) [] units in
+			fun a u -> process_outer_unit_decl env u :: a
+		) [] units in
 	try
-		let _ = List.find( fun f -> f.fname == "main" ) env.scope.functions in
+	    let _ = List.iter( fun f -> if f.fname = "main" then print_string "Found main" else print_string ("did not find main, found " ^ f.fname ^ "\n")) env.scope.functions in 
+		let _ = List.find( fun f -> f.fname = "main" ) env.scope.functions in
 		structs, globals, funcs, units
 	with Not_found -> raise (Failure "No main function defined.")
 
