@@ -298,17 +298,19 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 		let _ = find_func env.scope.functions f.fname in
 			raise (Failure ("Function already declared with name " ^ f.fname))
 	with Not_found ->
-		let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
-		let formals = List.fold_left (
-			fun a f -> match f with
-			Ast.Param(t, n) -> scope'.variables <- (n, Sast.Variable(t, n), t) :: scope'.variables; (Sast.Variable(t, n), t) :: a
-		) [] f.formals in
-		let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
-		let statements = process_func_stmt scope' f.body f.ftype in 
-		let units = List.fold_left ( fun a u -> process_func_units scope' u formals f.ftype :: a) [] f.units in
-		let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
-		env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *)
-		f
+		if f.fname = "print" then raise (Failure "A function cannot be named 'print'")
+		else
+			let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
+			let formals = List.fold_left (
+				fun a f -> match f with
+				Ast.Param(t, n) -> scope'.variables <- (n, Sast.Variable(t, n), t) :: scope'.variables; (Sast.Variable(t, n), t) :: a
+			) [] f.formals in
+			let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
+			let statements = process_func_stmt scope' f.body f.ftype in 
+			let units = List.fold_left ( fun a u -> process_func_units scope' u formals f.ftype :: a) [] f.units in
+			let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
+			env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *)
+			f
 		
 let process_assert (scope: symbol_table) a =
 	let (expr, stml) = a in
