@@ -1,5 +1,5 @@
 str foo(){
-	return "Hello World!";
+	return 1;
 }
 int main(){
 	return foo();

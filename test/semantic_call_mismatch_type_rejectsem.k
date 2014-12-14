@@ -1,8 +1,7 @@
-REJECT
 int foo(int x, int y){
 	return x+y;
 }
 
 int main(){
-	foo(3);
+	foo(Hello, World);
 }

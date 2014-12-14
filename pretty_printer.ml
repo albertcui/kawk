@@ -23,7 +23,7 @@ let rec print_expr = function
 	| Null -> print_string "null "
 	| Id(id) -> Printf.printf "%s " id
 	| Integer_literal(i) -> Printf.printf "%d " i 
-	| String_literal(str) -> Printf.printf "%S " str
+	| String_literal(str) -> Printf.printf "%s " str
 	| Boolean_literal(b) -> Printf.printf "%B " b
 	| Array_access(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]"
 	| Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr

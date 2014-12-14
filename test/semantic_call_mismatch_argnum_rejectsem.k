@@ -3,5 +3,5 @@ int foo(int x, int y){
 }
 
 int main(){
-	foo("Hello", "World");
+	foo(3);
 }
