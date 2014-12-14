@@ -382,6 +382,7 @@ let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) 
 	with Not_found -> raise (Failure ("Function not found with name " ^ f)))
 	
 let check_program (p : Ast.program) =
+	let _ = print_string ("check_program called \n") in
 	let s = { parent = None; variables = []; functions = []; structs = [] } in
 	let env = { scope = s } in
 	let (structs, vars, funcs, units) = p in 	
@@ -393,26 +394,34 @@ let check_program (p : Ast.program) =
 		List.fold_left (
 			fun a g -> process_global_decl env g :: a
 		) [] (List.rev vars) in
-	let funcs = List.fold_left (
+	let funcs = 
+		List.fold_left (
 			fun a f -> process_func_decl env f :: a
 		) [] funcs in
-	let units = List.fold_left (
+	let units = 
+		List.fold_left (
 			fun a u -> process_outer_unit_decl env u :: a
 		) [] units in
-	try
-	    let _ = List.iter( fun f -> if f.fname = "main" then print_string "Found main" else print_string ("did not find main, found " ^ f.fname ^ "\n")) env.scope.functions in 
+(* 	try *)
+	let _ = print_string ("length of env.scope.functions is " ^ string_of_int (List.length env.scope.functions) ^ "\n") in
+    let rec findMain = function
+    	[] -> false
+    	| hd::tl -> if hd.fname = "main" then true else findMain tl
+    in let foundMain  = findMain env.scope.functions in
+    (if foundMain then structs, globals, funcs, units else (raise (Failure "No main function defined??")))
+	    	(* let _ = List.iter( fun f -> if f.fname = "main" then print_string "Found main" else(*  print_string ("did not find main, found " ^ f.fname ^ "\n")) env.scope.functions in  *)
 		let _ = List.find( fun f -> f.fname = "main" ) env.scope.functions in
 		structs, globals, funcs, units
-	with Not_found -> raise (Failure "No main function defined.")
+	with Not_found -> raise (Failure "No main function defined.") *)
 
 let print_position outx lexbuf =
   let pos = lexbuf.lex_curr_p in
   Printf.fprintf outx "%s:%d:%d" pos.pos_fname
     pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
-let _ =
+(* let _ =
 	let lexbuf = Lexing.from_channel stdin in
-	let program = try
-	Parser.program Scanner.token lexbuf 
-	with _ -> Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; exit (-1) in
-	check_program program
+	let program =
+		try Parser.program Scanner.token lexbuf 
+		with _ -> Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; exit (-1) in 
+	check_program program *)
