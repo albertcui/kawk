@@ -1,7 +1,7 @@
 default: pretty semantic sast_jast
 
 sast_jast: scanner parser semantic sast_to_jast
-	ocamlc -o scanner.cmo parser.cmo semantic_checker.cmo sast_to_jast.cmo 	
+	ocamlc -o sast_to_jast scanner.cmo parser.cmo semantic_checker.cmo sast_to_jast.cmo 	
 
 pretty: scanner parser pretty_printer
 	ocamlc -o pretty parser.cmo scanner.cmo pretty_printer.cmo
@@ -9,7 +9,7 @@ pretty: scanner parser pretty_printer
 semantic: scanner parser semantic_checker
 	ocamlc -o semantic parser.cmo scanner.cmo semantic_checker.cmo
 
-sast_to_jast: jast 
+sast_to_jast: jast
 	ocamlc -c sast_to_jast.ml 
 
 semantic_checker: sast scanner
