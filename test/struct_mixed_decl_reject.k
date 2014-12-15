@@ -1,4 +1,3 @@
-REJECT
 struct potato { 
 int size; 
 int potat; 

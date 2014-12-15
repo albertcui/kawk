@@ -1,5 +1,5 @@
-REJECT
 int main(){
-	a = a + 1;
+	int a;
+	a = foo();
 	return 0;
 }

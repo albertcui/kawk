@@ -3,9 +3,23 @@
 #This will be expanded to accomodate more tests in the future
 
 import sys
-inputFileName = sys.argv[1]
-outputFileName = sys.argv[2]
-#flag that 
+mode = sys.argv[1]
+inputFileName = sys.argv[2]
+outputFileName = sys.argv[3]
+semanticReject = False
+semantic = False
+syntax = True
+syntaxReject = False
+if (inputFileName[:8] == "semantic"):
+	semantic = True
+	syntax = False
+	if (inputFileName[-11:] == "rejectsem.k"):
+		semanticReject = True 
+else:
+	print inputFileName[-8:] == "reject.k"
+	if (inputFileName[-8:] == "reject.k"):
+		syntaxReject = True
+
 shouldReject = False
 
 #convert the string by taking out spaces, newlines, and tabs
@@ -16,41 +30,42 @@ def convert_str(thestring):
 #read the files
 file1 = open(inputFileName, 'r')
 inputFileStr = file1.read()
-file2 = open(outputFileName, 'a')
-file2.write(" ")
-file2.close()
-
 file2 = open(outputFileName, 'r')
 outputFileStr = file2.read()
-
 
 #convert to string
 inString = str(inputFileStr)
 outString = str(outputFileStr)
 
-
 inputTestStr = convert_str(inString)
 outputTestStr = convert_str(outString)
 
+if (syntax == True and mode == "pretty"):
+	print inputFileName
+	print outputFileName
+	if (outputTestStr == inputTestStr and syntaxReject == False):
+		print "Syntax test ACCEPTED\n"
+	elif (outputTestStr != inputTestStr and syntaxReject == True):
+		print "Syntax test ACCEPTED\n"
+	else:
+		print "Syntax test REJECTED"
+		print "The input file:"
+		print inputFileStr
+		print "The output file:"
+		print outputFileStr
+		print "\n"
 
-
-# if the test should 'reject', the overall test will   
-if (inputTestStr[:6] == "REJECT"):
-	inputToCompare = inputTestStr[6:]
-	shouldReject = True
-else:
-	inputToCompare = inputTestStr
-
-print inputFileName
-print outputFileName
-if (outputTestStr == inputToCompare and shouldReject == False):
-	print "ACCEPT\n"
-elif (outputTestStr != inputToCompare and shouldReject == True):
-	print "ACCEPT\n"
-else:
-	print "REJECT "
-	print "The input file:"
-	print inputFileStr
-	print "The output file:"
-	print outputFileStr
-	print "\n"
+elif (semantic == True and mode == "semantic" ):
+	print inputFileName
+	print outputFileName
+	if (outputTestStr == inputTestStr and semanticReject == False):
+		print "Semantic test ACCEPTED\n"
+	elif (outputTestStr != inputTestStr and semanticReject == True):
+		print "Semantic test ACCEPTED\n"
+	else:
+		print "Semantic Test REJECTED"
+		print "The input file:"
+		print inputFileStr
+		print "The error:"
+		print outputFileStr
+		print "\n"
