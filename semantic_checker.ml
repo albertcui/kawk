@@ -111,25 +111,27 @@ and check_assign (scope : symbol_table) a = match a with
 
 and check_call (scope : symbol_table) c = match c with
 	Ast.Call(id, el) ->
-		(try
-			let f = find_func scope.functions id in
-			let exprs = List.fold_left2 (
-					fun a b c -> 
-						let (_, t) = b in
-						let expr = check_expr scope c in
-						let (_, t2) = expr in
-						if t <> t2
-						then raise (Failure "wrong type")
-						else expr :: a
-				) [] f.checked_formals el in
-			Sast.Call(f, exprs), f.ftype
-		with Not_found ->
-			if id = "print" then match el with
-				| hd :: []-> let expr = check_expr scope hd in
-					let (_, t) = expr in
-					if t = String then Sast.Call(the_print_function, [expr]), Ast.Void else raise (Failure "Print takes only type string")
-				| _ -> raise (Failure "Print only takes one argument")  
-			else raise (Failure ("Function not found with name " ^ id)))
+		(
+			try
+				let f = find_func scope.functions id in
+				let exprs = List.fold_left2 (
+						fun a b c -> 
+							let (_, t) = b in
+							let expr = check_expr scope c in
+							let (_, t2) = expr in
+							if t <> t2
+							then raise (Failure "wrong type")
+							else expr :: a
+					) [] f.checked_formals el in
+				Sast.Call(f, exprs), f.ftype
+			with Not_found ->
+				if id = "print" then match el with
+					| hd :: []-> let expr = check_expr scope hd in
+						let (_, t) = expr in
+						if t = String then Sast.Call(the_print_function, [expr]), Ast.Void else raise (Failure "Print takes only type string")
+					| _ -> raise (Failure "Print only takes one argument")  
+				else (if id = "main" then raise (Failure "Cannot fall main function") else raise (Failure ("Function not found with name " ^ id)))
+		)
 	| _ -> raise (Failure "Not a call")	
 
 and check_access (scope : symbol_table) a = match a with
