@@ -1,6 +1,6 @@
 str foo(){
 	return "Hello World!";
 }
-int main(){
+str main(){
 	return foo();
 }

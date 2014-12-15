@@ -28,7 +28,7 @@ if make
 		echo "-----------------------------------------"
 		rm -f test/output_semantic*.k
 		for filename in semantic*.k; do
-			.././semantic < "$filename" > "output_$filename" 2>&1
+			.././sast_to_jast < "$filename" > "output_$filename" 2>&1
 			python test_logic.py semantic "$filename" "output_$filename"
 		done
 		echo "-----------------------------------------"

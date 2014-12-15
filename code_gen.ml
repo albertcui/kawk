@@ -8,14 +8,14 @@ let print_op = function
 	| Mult -> print_string "* "
 	| Div -> print_string "/ "
 	| Mod -> print_string "% "
-	| Equal -> print_string "= "
+	| Equal -> print_string "== "
 	| Neq -> print_string "!= "
 	| Less -> print_string "< " 
 	| Leq -> print_string "<= "
 	| Greater -> print_string "> "
 	| Geq -> print_string ">= "
-	| Or -> print_string "| "
-	| And -> print_string "& "
+	| Or -> print_string "|| "
+	| And -> print_string "&& "
 	| Not -> print_string "! " 
 
 let rec print_expr = function
@@ -24,7 +24,7 @@ let rec print_expr = function
 	| Null -> print_string "null "
 	| Id(id) -> Printf.printf "%s " id
 	| Integer_literal(i) -> Printf.printf "%d " i 
-	| String_literal(str) -> Printf.printf "%S " str
+	| String_literal(str) -> Printf.printf "%s " str
 	| Boolean_literal(b) -> Printf.printf "%B " b
 	| Array_access(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]"
 	| Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr
@@ -66,9 +66,9 @@ let rec print_stmt = function
 let rec print_var_types = function
 	Void -> print_string "void "
 	| Int -> print_string "int "
-	| String -> print_string "str " 
-	| Boolean -> print_string "bool "
-	| Struct(str) -> Printf.printf "struct %s " str 
+	| String -> print_string "String " 
+	| Boolean -> print_string "boolean "
+	| Struct(str) -> Printf.printf "public class %s " str 
 	| Array(var_types, expr) -> print_var_types var_types; print_string "["; print_expr expr; print_string "] "
 
 let rec print_var_decl = function
@@ -80,11 +80,48 @@ let rec print_var_decl = function
 
 let print_asserts a =
 	let (expr, stmt_list) = a in
-	print_string "@("; print_expr expr; print_string ") "; List.iter print_stmt stmt_list
+	print_string "@("; print_string "if ."; print_expr expr; print_string ") "; List.iter print_stmt stmt_list
+
+(*
+
+	struct potato { 
+int size; 
+int potat; 
+@(potate<2 & size > 1) {return "AHH THIS IS >1"}
+int j;
+}
+ 	public class Potato {
+		 int size;
+		 int potat;
+		public Blah(size,potat){
+			this.size = size;
+			this.potat = potat;
+		}
+
+		public getSize(){
+			return size;
+		}
+		public setSize(int size){
+			this.size = size;
+			if (this.size>1){
+				return ("AHH THIS IS > 1");
+			}
+		}
+		public getPotat(){
+			return size;
+		}
+		public setPotat(int potat){
+			this.potat = potat;
+		}
+ 	}
+
+
+*)
+
 
 (* FIX THIS *)
 let print_struct_decl s =
-	print_string "struct ";
+	print_string "public class ";
 	print_string s.sname; 
 	print_string " {\n";
 	List.iter print_var_decl s.variable_decls;
