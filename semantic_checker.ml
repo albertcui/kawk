@@ -39,16 +39,16 @@ let find_func (l : function_decl list) f =
 
 let rec check_id (scope : symbol_table) id =
 	try
-		let _ = print_string ("check_id called, legnth of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in
-		let _ = List.iter (fun (n, _, _) -> print_string ("try printing in check_id: " ^ n ^ "\n")) scope.variables in
+		(* let _ = print_string ("check_id called, legnth of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in *)
+		(* let _ = List.iter (fun (n, _, _) -> print_string ("try printing in check_id: " ^ n ^ "\n")) scope.variables in *)
 		let (_, decl, t) = List.find(fun (n, _, _) -> n = id ) scope.variables in
 		decl, t
 	with Not_found -> match scope.parent with
 		Some(parent) -> check_id parent id
 		| _ -> raise Not_found
  
- let rec check_expr (scope : symbol_table) (expr : Ast.expr) =
- 	let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in match expr with
+ let rec check_expr (scope : symbol_table) (expr : Ast.expr) = match expr with
+ 	(* let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in match expr with *)
 	Noexpr -> Sast.Noexpr, Void
 	| This -> Sast.This, Void
 	| Null -> Sast.Null, Void 
@@ -195,7 +195,7 @@ let rec check_stmt (scope : symbol_table) (stmt : Ast.stmt) = match stmt with
 		Sast.While(expr, stmt)
 
 let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
-	let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in
+	(* let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in *)
 	let triple = match v with
 		Variable(t, name) -> (name, Sast.Variable(t, name), t)
 		| Variable_Initialization(t, name, expr) ->
@@ -233,7 +233,7 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 					| _ -> raise (Failure "Not a struct")
 			) in
 	let (_, decl, t) = triple in
-	scope.variables <- triple :: scope.variables; List.iter (fun (n, _, _) -> print_string ("try printing in process_var_decl:" ^ n ^ "\n")) scope.variables; (* Update the scope *)
+	scope.variables <- triple :: scope.variables; (* List.iter (fun (n, _, _) -> print_string ("try printing in process_var_decl:" ^ n ^ "\n")) scope.variables; *) (* Update the scope *)
 	(decl, t)
 
 let rec check_func_stmt (scope : symbol_table) (stml : Sast.stmt list) (ftype : Ast.var_types) = 
@@ -365,7 +365,7 @@ let process_global_decl (env : translation_environment) (g : Ast.var_decl) =
 		let _ = check_id env.scope name in
 		raise (Failure ("Variable already declared with name " ^ name))
 	with Not_found -> 
-		let _ = print_string ("p_global_decl called, this id not found, legnth of env.scope.variables is " ^ string_of_int (List.length env.scope.variables) ^ "\n") in
+		(* let _ = print_string ("p_global_decl called, this id not found, legnth of env.scope.variables is " ^ string_of_int (List.length env.scope.variables) ^ "\n") in *)
 		process_var_decl env.scope g
 
 let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) = match u with
@@ -389,7 +389,7 @@ let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) 
 	with Not_found -> raise (Failure ("Function not found with name " ^ f)))
 	
 let check_program (p : Ast.program) =
-	let _ = print_string ("check_program called \n") in
+	(* let _ = print_string ("check_program called \n") in *)
 	let s = { parent = None; variables = []; functions = []; structs = []; return_found = false } in
 	let env = { scope = s } in
 	let (structs, vars, funcs, units) = p in 	
@@ -410,7 +410,7 @@ let check_program (p : Ast.program) =
 			fun a u -> process_outer_unit_decl env u :: a
 		) [] units in
 (* 	try *)
-	let _ = print_string ("length of env.scope.functions is " ^ string_of_int (List.length env.scope.functions) ^ "\n") in
+	(* let _ = print_string ("length of env.scope.functions is " ^ string_of_int (List.length env.scope.functions) ^ "\n") in *)
     let rec findMain = function
     	[] -> false
     	| hd::tl ->
