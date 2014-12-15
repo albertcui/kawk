@@ -11,4 +11,4 @@ type struct_decl = {
 	variable_decls: j_var_struct_decl list; (* list of asserts/shared variables *) 
 }
 
-type program = struct_decl list * variable_decl list * function_decl list
+type program = struct_decl list * variable_decl list * function_decl list * unit_decl list
