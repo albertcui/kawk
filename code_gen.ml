@@ -1,4 +1,5 @@
-open Ast
+(* Code gen*)
+open Jast
 open Lexing
 
 let print_op = function
@@ -83,8 +84,8 @@ let print_asserts a =
 
 (* FIX THIS *)
 let print_struct_decl s =
-	print_string "public class ";
-	print_string s.sname;
+	print_string "struct ";
+	print_string s.sname; 
 	print_string " {\n";
 	List.iter print_var_decl s.variable_decls;
 	List.iter print_asserts s.asserts;
@@ -115,21 +116,18 @@ let print_func_decl f =
 	List.iter print_unit_decl f.units;
 	print_string "}\n"
 
-let print_program p =
-	let (structs, vars, funcs, unts) = p in 	
-		List.iter print_struct_decl structs;
-		List.iter print_var_decl vars;
-		List.iter print_func_decl (List.rev funcs);
-		List.iter print_unit_decl unts 
-
-let print_position outx lexbuf =
-  let pos = lexbuf.lex_curr_p in
-  Printf.fprintf outx "%s:%d:%d" pos.pos_fname
-    pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
+let code_gen j =
+	let (structs, vars, funcs, unts) = j in
+			List.iter print_struct_decl structs;
+			List.iter print_var_decl vars;
+			List.iter print_func_decl (List.rev funcs);
+			List.iter print_unit_decl units
 
 let _ =
 	let lexbuf = Lexing.from_channel stdin in
-	let program = try
-	Parser.program Scanner.token lexbuf 
+	let ast = try
+	Parser.program Scanner.token lexbuf
 	with _ -> Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; exit (-1) in
-	print_program program
+	let sast = check_program ast in
+	jast = check_program sast in
+	code_gen jast
