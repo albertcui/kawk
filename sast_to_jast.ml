@@ -2,8 +2,8 @@ open Sast
 open Jast
 open Semantic_checker
 open Lexing
-open Map
-
+(* open Map
+ *)
 let find_decl (var_decl : Sast.checked_var_decl) (var_list : Jast.j_var_struct_decl list) =
 	List.find (fun v -> let (v, _) = v.the_variable in v = var_decl) var_list
 
@@ -44,11 +44,11 @@ let sast_to_jast p =
 	let (structs, vars, funcs, units) = p in 	
 	let structs = List.fold_left (fun a s -> process_struct_decl s) [] structs in
 	(structs, vars, funcs, units)
-
+(* 
 let _ =
 	let lexbuf = Lexing.from_channel stdin in
 	let ast = try
 	Parser.program Scanner.token lexbuf 
 	with _ -> Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; exit (-1) in
 	let sast = check_program ast in
-	sast_to_jast sast 
+	sast_to_jast sast  *)

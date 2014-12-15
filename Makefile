@@ -1,10 +1,16 @@
-default: pretty semantic sast_jast
+default: code_gener pretty semantic sast_jast
+
+code_gener: scanner parser semantic sast_to_jast code_gen
+	ocamlc -o code_gen scanner.cmo parser.cmo semantic_checker.cmo sast_to_jast.cmo code_gen.cmo
 
 sast_jast: scanner parser semantic sast_to_jast
 	ocamlc -o sast_to_jast scanner.cmo parser.cmo semantic_checker.cmo sast_to_jast.cmo 	
 
 pretty: scanner parser pretty_printer
 	ocamlc -o pretty parser.cmo scanner.cmo pretty_printer.cmo
+
+code_gen: jast
+	ocamlc -c code_gen.ml
 
 semantic: scanner parser semantic_checker
 	ocamlc -o semantic parser.cmo scanner.cmo semantic_checker.cmo
