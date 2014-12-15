@@ -97,6 +97,7 @@ sdecl:
 
 the_type:
 	INT { Int }
+	| VOID { Void }
 	| STRING { String }
 	| BOOL { Boolean }
 	| STRUCT ID { Struct($2) }
