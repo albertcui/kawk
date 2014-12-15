@@ -58,14 +58,26 @@ if (syntax == True and mode == "pretty"):
 elif (semantic == True and mode == "semantic" ):
 	print inputFileName
 	print outputFileName
-	if (outputTestStr == inputTestStr and semanticReject == False):
-		print "Semantic test ACCEPTED\n"
-	elif (outputTestStr != inputTestStr and semanticReject == True):
-		print "Semantic test ACCEPTED\n"
-	else:
-		print "Semantic Test REJECTED"
-		print "The input file:"
-		print inputFileStr
-		print "The error:"
-		print outputFileStr
-		print "\n"
+
+	#print outputTestStr
+	try:
+		outputTestStr.index("Fatalerror:")
+		if (semanticReject == True):
+			print "Semantic test ACCEPTED\n"
+		elif (semanticReject == False):
+			print "Semantic Test REJECTED"
+			print "The input file:"
+			print inputFileStr
+			print "The error:"
+			print outputFileStr
+			print "\n"
+	except ValueError:
+		if (semanticReject == False):
+			print "Semantic test ACCEPTED\n"
+		elif (semanticReject == True):
+			print "Semantic Test REJECTED"
+			print "The input file:"
+			print inputFileStr
+			print "The error:"
+			print outputFileStr
+			print "\n"
