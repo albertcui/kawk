@@ -15,11 +15,11 @@ type symbol_table = {
 	mutable variables : (string * checked_var_decl * var_types) list;
 	mutable functions : function_decl list;
 	mutable structs : struct_decl list;
+	mutable return_found : bool;
 }
 
 type translation_environment = {
-	mutable scope : symbol_table (* symbol table for vars *)
-	(* return_type : var_types Function’s return type *)
+	mutable scope : symbol_table; (* symbol table for vars *)
 }
 
 let the_print_function = {
@@ -260,7 +260,7 @@ let process_func_stmt (scope : symbol_table) (stml : Ast.stmt list) (ftype : Ast
 		| Sast.Return(e) -> 
 			let (_, t) = e in 
 			if t <> ftype then raise (Failure "return type is incorrect") else
-			stmt :: a 
+			scope.return_found <- true; stmt :: a 
 		| Sast.If(_, s1, s2) -> 
 			check_func_stmt scope [s1] ftype; check_func_stmt scope [s2] ftype; stmt :: a
 		| Sast.For(_, _, _, s) ->
@@ -310,7 +310,7 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	with Not_found ->
 		if f.fname = "print" then raise (Failure "A function cannot be named 'print'")
 		else (
-			let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
+			let scope' = { env.scope with parent = Some(env.scope); variables = []; return_found = false } in
 			let formals = List.fold_left (
 				fun a f -> match f with
 				Ast.Param(t, n) -> scope'.variables <- (n, Sast.Variable(t, n), t) :: scope'.variables; (Sast.Variable(t, n), t) :: a
@@ -318,9 +318,14 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 			let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
 			let statements = process_func_stmt scope' f.body f.ftype in 
 			let units = List.fold_left ( fun a u -> process_func_units scope' u formals f.ftype :: a) [] f.units in
-			let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
-			env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *)
-			f
+			if env.scope.return_found then 
+				let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
+				env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
+			else if f.ftype = Void then 
+				let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
+					env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
+			else
+				raise (Failure ("No return for function " ^ f.fname ^ " when return expected."))
 		)
 
 let process_assert (scope: symbol_table) a =
@@ -383,7 +388,7 @@ let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) 
 	
 let check_program (p : Ast.program) =
 	let _ = print_string ("check_program called \n") in
-	let s = { parent = None; variables = []; functions = []; structs = [] } in
+	let s = { parent = None; variables = []; functions = []; structs = []; return_found = false } in
 	let env = { scope = s } in
 	let (structs, vars, funcs, units) = p in 	
 	let structs = 
@@ -406,7 +411,10 @@ let check_program (p : Ast.program) =
 	let _ = print_string ("length of env.scope.functions is " ^ string_of_int (List.length env.scope.functions) ^ "\n") in
     let rec findMain = function
     	[] -> false
-    	| hd::tl -> if hd.fname = "main" then true else findMain tl
+    	| hd::tl ->
+    		if hd.fname = "main" then
+    			(if (hd.ftype <> Void && (List.length hd.checked_formals) <> 0) then (raise (Failure "main function must be type void with no arguments")) else true)
+    		else findMain tl
     in let foundMain  = findMain env.scope.functions in
     (if foundMain then structs, globals, funcs, units else (raise (Failure "No main function defined??")))
 	    	(* let _ = List.iter( fun f -> if f.fname = "main" then print_string "Found main" else(*  print_string ("did not find main, found " ^ f.fname ^ "\n")) env.scope.functions in  *)
