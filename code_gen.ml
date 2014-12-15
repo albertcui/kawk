@@ -85,6 +85,7 @@ let rec print_var_types = function
  
 	| _ -> print_string ""
 
+
 let rec print_var_decl  (v : Sast.variable_decl) =
 	let (var_types, _) = v in match var_types with
 	Variable(var_types, str) -> print_var_types var_types; print_string (str ^ ";\n")
@@ -160,7 +161,7 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 		List.iter print_asserts s.asserts;
 		print_string "}" *)
 	
-(* let print_unit_decl = function
+ (* let print_unit_decl = function
 	Local_udecl(udecl_params, udecl_check_val, true) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
 	| Local_udecl(udecl_params, udecl_check_val, false) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
 	| Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
@@ -182,16 +183,16 @@ let print_func_decl (f : Sast.function_decl) =
 		List.iter print_stmt f.checked_body;
 		print_string "}")
 	else
-		print_string ""
-		(* print_var_types f.ftype;
-		print_string f.fname; 
+		print_string "";
+		print_var_types f.ftype;
+		print_string f.fname;
 		print_string "(";
-		print_param_list f.checked_formals; 
+		(* print_param_list f.checked_formals;  *)
 		print_string ") {\n";
-		List.iter print_var_decl f.check_locals; 
+		List.iter print_var_decl f.checked_locals; 
 		List.iter print_stmt f.checked_body;
-		List.iter print_unit_decl f.checked_units;
-		print_string "}\n" *)
+		(* List.iter print_unit_decl f.checked_units; *)
+		print_string "}\n"
 
 let code_gen j =
 	let _ = print_string "public class Program {\n" in
