@@ -233,8 +233,11 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 					| _ -> raise (Failure "Not a struct")
 			) in
 	let (_, decl, t) = triple in
-	scope.variables <- triple :: scope.variables; (* List.iter (fun (n, _, _) -> print_string ("try printing in process_var_decl:" ^ n ^ "\n")) scope.variables; *) (* Update the scope *)
-	(decl, t)
+	if t = Void then
+		raise (Failure "Variable cannot be type void.")
+	else 
+		scope.variables <- triple :: scope.variables; (* List.iter (fun (n, _, _) -> print_string ("try printing in process_var_decl:" ^ n ^ "\n")) scope.variables; *) (* Update the scope *)
+		(decl, t)
 
 let rec check_func_stmt (scope : symbol_table) (stml : Sast.stmt list) (ftype : Ast.var_types) = 
 	List.iter (
