@@ -80,7 +80,7 @@ let print_asserts a =
 
 (* FIX THIS *)
 let print_struct_decl s =
-	print_string "public class ";
+	print_string "struct ";
 	print_string s.sname;
 	print_string " {\n";
 	List.iter print_var_decl s.variable_decls;
