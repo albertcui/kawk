@@ -418,7 +418,7 @@ let check_program (p : Ast.program) =
     	[] -> false
     	| hd::tl ->
     		if hd.fname = "main" then
-    			(if (hd.ftype <> Void && (List.length hd.checked_formals) <> 0) then (raise (Failure "main function must be type void with no arguments")) else true)
+    			(if (hd.ftype <> Void || (List.length hd.checked_formals) <> 0) then (raise (Failure "main function must be type void with no arguments")) else true)
     		else findMain tl
     in let foundMain  = findMain env.scope.functions in
     (if foundMain then structs, globals, funcs, units else (raise (Failure "No main function defined??")))
