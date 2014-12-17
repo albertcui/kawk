@@ -20,8 +20,8 @@ rule token = parse
   | "@" { ASSERT }  | "unit" { UNIT } | '.' { ACCESS }
   | "else" { ELSE } | "if" { IF } (* Keywords *)
   | "while" { WHILE } | "for" { FOR }
-  | "return" { RETURN } | "accept" { ACCEPT }
-  | "struct" { STRUCT } | "reject" { REJECT }
+  | "return" { RETURN } 
+  | "struct" { STRUCT } 
   | "void" { VOID }
   | "this" { THIS } | "null" { NULL }
   | "bool" { BOOL } | "int" { INT } | "str" { STRING } 
