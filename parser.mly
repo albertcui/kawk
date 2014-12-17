@@ -152,6 +152,7 @@ expr:
 	| ID ACCESS ID					{ Access ($1, $3) }
 	| ID ASSIGN expr 				{ Assign ($1, $3) }
 	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) }
+	| ID ACCESS ID ASSIGN expr      { Struct_Member_Assign($1, $3, $5)}
 	| LPAREN expr RPAREN 			{ $2 }
 	| ID LBRACK expr RBRACK         { Array_access($1, $3) }
 

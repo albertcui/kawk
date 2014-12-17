@@ -30,7 +30,7 @@ let rec check_assert_expr (var_decl : Jast.j_var_struct_decl) a (e : Sast.expres
 (* iterate over s.variable_decls to make 
 	corresponding j_var_struct_decls intially with empty asserts*)
 let process_struct_decl (s : Sast.struct_decl) = 
-	let j_var_decls = List.fold_left (fun a v -> {the_variable = v; asserts = []} :: a) [] s.variable_decls in
+	let j_var_decls = List.fold_left (fun a v -> {the_variable = v; asserts = [] } :: a) [] s.variable_decls in
 	List.iter (
 		fun (var_decl : Jast.j_var_struct_decl) ->
 			let asserts = List.fold_left (

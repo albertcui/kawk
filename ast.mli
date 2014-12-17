@@ -14,6 +14,7 @@ type expr = (* Expressions *)
 	| Binop of expr * op * expr (* a + b *)
 	| Call of string * expr list (* foo(1, 25) *)
 	| Access of string * string (* foo.bar *)
+	| Struct_Member_Assign of string * string * expr
 
 type stmt = (* Statements *)
 	Block of stmt list (* { ... } *)

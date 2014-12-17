@@ -173,7 +173,7 @@ let print_func_decl (f : Sast.function_decl) =
 		List.iter print_stmt f.checked_body;
 		print_string "}")
 	else
-		print_var_types f.ftype;
+		(print_var_types f.ftype;
 		print_string f.fname; 
 		print_string "(";
 		print_param_list f.checked_formals; 
@@ -181,7 +181,7 @@ let print_func_decl (f : Sast.function_decl) =
 		List.iter print_var_decl f.checked_locals; 
 		List.iter print_stmt f.checked_body;
 		(* List.iter print_unit_decl f.ch0ecked_units; *)
-		print_string "}\n"
+		print_string "}\n")
 
 let code_gen j =
 	let _ = print_string "public class Program {\n" in
