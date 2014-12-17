@@ -225,13 +225,11 @@ let print_struct_decl (s : Jast.j_struct_decl) =
 	print_constructors s.sname s.variable_decls;
 	print_string "\n}\n"
 	
- (* let print_unit_decl = function
-	Local_udecl(udecl_params, udecl_check_val, true) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
-	| Local_udecl(udecl_params, udecl_check_val, false) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
-	| Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
-	| Outer_udecl(str, udecl_params, udecl_check_val, false) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
- *)
-
+let print_unit_decl (u : Sast.unit_decl) = match u with
+	Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) System.out.println(\"The test passes\"); \n"
+	| Outer_udecl(str, udecl_params, udecl_check_val, false) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) System.out.println(\"The test fails\");\n"
+	| Local_udecl(udecl_params, udecl_check_val, false) -> print_string "local_inner_false:"
+	| Local_udecl(udecl_params, udecl_check_val, true) -> print_string "local_inner_true:"
 
 let rec print_param_list (p : Sast.variable_decl list) = match p with
 	[] -> print_string "";
@@ -243,9 +241,11 @@ let print_func_decl (f : Sast.function_decl) =
 		(print_string "public static void main(String[] args) {\n";
 		List.iter print_var_decl f.checked_locals;
 		List.iter print_stmt f.checked_body;
+		List.iter print_unit_decl f.checked_units; 
 		print_string "}")
 	else
 		(
+			print_string " static ";
 			print_var_types f.ftype;
 			print_string f.fname; 
 			print_string "(";
@@ -253,7 +253,7 @@ let print_func_decl (f : Sast.function_decl) =
 			print_string ") {\n";
 			List.iter print_var_decl f.checked_locals; 
 			List.iter print_stmt f.checked_body;
-			(* List.iter print_unit_decl f.checked_units; *)
+			List.iter print_unit_decl f.checked_units; 
 			print_string "}\n"
 		)
 
@@ -263,7 +263,7 @@ let code_gen j =
 			List.iter print_struct_decl structs;
 			List.iter print_var_decl vars;
 			List.iter print_func_decl (List.rev funcs);
-			(* List.iter print_unit_decl unts; *)
+			List.iter print_unit_decl unts;
 			print_string "\n}\n"
 
 let _ =	
