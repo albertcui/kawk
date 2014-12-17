@@ -25,7 +25,7 @@ let rec check_j_in_a (j : Sast.variable_decl) (e : Sast.expression) =
 let rec check_assert_expr assert_list (var_decl : Sast.variable_decl) a (e : Sast.expression) =
 	try
 		let _ = List.find(fun other_assert -> other_assert = a) assert_list in false
-	with Not_found -> print_string "check_assert not found\n"; if check_j_in_a var_decl e then true else false
+	with Not_found -> if check_j_in_a var_decl e then true else false
 
 (* iterate over s.variable_decls to make 
 	corresponding j_var_struct_decls intially with empty asserts*)

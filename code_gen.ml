@@ -23,7 +23,8 @@ let print_op = function
 	| Not -> print_string "! " 
 
 (* FIX ID *)
-let rec print_expr (e : Sast.expr_detail) = match e with
+let rec print_expr (e : Sast.expression) = 
+	let (e, _) = e in match e with
 	Noexpr -> print_string ""
 	| Id(decl) -> let str = match decl with
 		Variable(_, str) -> str
@@ -39,34 +40,33 @@ let rec print_expr (e : Sast.expr_detail) = match e with
 	| Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr
 	| Uniop(op, expr) -> print_op op; print_expr expr *)
 	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2 
-(* 	| Call(f, expr_list) -> 
-		if f.fname = "exit" then print_string ("System.out.println("; print_expr expr_list; print_string ");\n System.exit(0);" ) 
+	| Call(f, expr_list) -> 
+		if f.fname = "exit" then (print_string "System.out.println("; List.iter print_expr expr_list; print_string ");\n System.exit(0);") 
 		else
 			(if f.fname = "print" then print_string "System.out.println("
 			else Printf.printf "%s(" f.fname);
 			let rec print_expr_list_comma = function
 				[] -> print_string ""
-				| (e, _)::[] -> print_expr e
-				| (e, _)::tl -> print_expr e; print_string ", "; print_expr_list_comma tl 
-				in print_expr_list_comma expr_list; print_string ") " *)
+				| e::[] -> print_expr e
+				| e::tl -> print_expr e; print_string ", "; print_expr_list_comma tl 
+				in print_expr_list_comma expr_list; print_string ") "
 	(* | Access(str1, str2) -> Printf.printf "%s.%s " str1 str2  *)
 	| _ -> print_string ""
 
 let rec print_expr_list_comma (el : Sast.expression list) = match el with
 	[] -> print_string ""
-	| hd::[] -> let (expr_detail, _) = hd in print_expr expr_detail
-	| hd::tl -> let (expr_detail, _) = hd in print_expr expr_detail; print_string ", "; print_expr_list_comma tl 
+	| hd::[] -> print_expr hd
+	| hd::tl -> print_expr hd; print_string ", "; print_expr_list_comma tl 
 
 let print_expr_semi (e : Sast.expression) = 
-	let (expr_detail, _) = e in 
-	print_expr expr_detail; print_string ";\n"
+	print_expr e; print_string ";\n"
 
 let rec print_stmt = function
 	Block(stmt_list) -> print_string "{"; List.iter print_stmt stmt_list; print_string "}\n"
 	| Expr(expr) -> print_expr_semi expr
 	| Return(expr) -> print_string "return "; print_expr_semi expr
 	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr_semi expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
-	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr_semi expr1; print_expr_semi expr2; let (expr_detail, _) = expr3 in print_expr expr_detail; print_stmt stmt 
+	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr_semi expr1; print_expr_semi expr2; print_expr expr3; print_stmt stmt 
 	| While(expr, stmt) -> print_string "while ("; print_expr_semi expr; print_string ")"; print_stmt stmt
 
 let rec print_var_types = function
@@ -78,7 +78,7 @@ let rec print_var_types = function
 	| Array(var_types, expr) ->
 		print_var_types var_types;
 		print_string "[";
-		let (detail, _) = expr in print_expr detail;
+		print_expr expr;
 		print_string "] "
  
  let print_param v =
@@ -153,7 +153,6 @@ let rec print_function_params (v : Jast.j_var_struct_decl list) = match v with
 let print_asserts a_list =
 	List.iter (
 		fun (expr, stmt_list) ->
-			let (expr, _) = expr in
 			print_string "if(!(";
 			print_expr expr;
 			print_string ")){\n";
@@ -165,14 +164,14 @@ let print_asserts a_list =
 
 let print_j_var_decl (dec : j_var_struct_decl) =
 	print_var_decl dec.the_variable;
-	print_string (string_of_int (List.length dec.asserts));
 	if (List.length dec.asserts) <> 0 then
 		(
-			print_string("\npublic set_" ^ dec.name ^ "(");
+			print_string("\npublic void set_" ^ dec.name ^ "(");
 			print_param dec.the_variable;
 			print_string "){\n";
 			print_string ("this." ^ dec.name ^ "=" ^ dec.name ^ ";\n");
-			print_asserts dec.asserts
+			print_asserts dec.asserts;
+			print_string "}\n"
 		)
 	else ()
 
@@ -183,7 +182,9 @@ let print_constructors (name : string) (s : Jast.j_var_struct_decl list) =
 	List.iter (
 		fun dec -> print_string ("this." ^ dec.name ^ "=" ^ dec.name ^ ";\n")
 	) s;
-	print_string "\n}\n"
+	print_string "\n}\n";
+	(* Empty constructor*)
+	print_string ("public " ^ (String.capitalize name) ^ "(){}\n")
 
 let print_struct_decl (s : Jast.j_struct_decl) =
 	print_string "class ";
@@ -214,15 +215,17 @@ let print_func_decl (f : Sast.function_decl) =
 		List.iter print_stmt f.checked_body;
 		print_string "}")
 	else
-		(print_var_types f.ftype;
-		print_string f.fname; 
-		print_string "(";
-		(* print_param_list f.checked_formals;  *)
-		print_string ") {\n";
-		List.iter print_var_decl f.checked_locals; 
-		List.iter print_stmt f.checked_body;
-		(* List.iter print_unit_decl f.ch0ecked_units; *)
-		print_string "}\n")
+		(
+			print_var_types f.ftype;
+			print_string f.fname; 
+			print_string "(";
+			(* print_param_list f.checked_formals;  *)
+			print_string ") {\n";
+			List.iter print_var_decl f.checked_locals; 
+			List.iter print_stmt f.checked_body;
+			(* List.iter print_unit_decl f.ch0ecked_units; *)
+			print_string "}\n"
+		)
 
 let code_gen j =
 	let _ = print_string "public class Program {\n" in
