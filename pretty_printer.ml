@@ -19,7 +19,6 @@ let print_op = function
 
 let rec print_expr = function
 	Noexpr -> print_string ""
-	| This -> print_string "this "
 	| Id(id) -> Printf.printf "%s " id
 	| Integer_literal(i) -> Printf.printf "%d " i 
 	| String_literal(str) -> Printf.printf "%s " str

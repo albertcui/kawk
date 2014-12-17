@@ -132,8 +132,7 @@ expr:
 	ID									{ Id($1) }
 	| INT_LITERAL 						{ Integer_literal($1) }
 	| STRING_LITERAL					{ String_literal($1) }
-	| BOOL_LITERAL						{ Boolean_literal($1) } 
-	| THIS 								{ This }
+	| BOOL_LITERAL						{ Boolean_literal($1) }
 	| NOT expr  						{ Uniop(Not, $2) }
 	| expr PLUS expr					{ Binop($1, Add, $3) }
 	| expr MINUS expr 					{ Binop($1, Sub, $3) }

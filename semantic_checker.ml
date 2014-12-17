@@ -60,7 +60,6 @@ let rec check_id (scope : symbol_table) id =
  let rec check_expr (scope : symbol_table) (expr : Ast.expr) = match expr with
  	(* let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in match expr with *)
 	Noexpr -> Sast.Noexpr, Void
-	| This -> Sast.This, Void
 	| Id(str) -> 
 		(try 
 			let (decl, t) = check_id scope str in Sast.Id(decl), t 

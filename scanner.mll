@@ -22,7 +22,7 @@ rule token = parse
   | "while" { WHILE } | "for" { FOR }
   | "return" { RETURN } | "accept" { ACCEPT }
   | "struct" { STRUCT } | "reject" { REJECT }
-  | "void" { VOID } |"this" { THIS }
+  | "void" { VOID } 
   | "bool" { BOOL } | "int" { INT } | "str" { STRING } 
   | "equals" { EQUALS }
   | '"'('\\'_ |[^'"'])*'"' as str { STRING_LITERAL(str) }  (* Strings *)
