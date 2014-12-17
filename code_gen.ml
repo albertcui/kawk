@@ -133,7 +133,7 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 			| _ -> print_var_types var_types; print_string (str ^ ";\n"))
 		| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf "%s = " str; print_expr_semi expr
 		| Array_Initialization(var_types, str, expr_list) -> (match var_types with 
-			Array(var_types, _) -> print_var_types var_types; Printf.printf "[] %s = { " str; print_expr_list_comma (List.rev expr_list); print_string "};\n"
+			Array(var_types, _) -> print_var_types var_types; Printf.printf "[] %s = { " str; print_expr_list_comma expr_list; print_string "};\n"
 			| _ -> raise (Failure "Not an array"))
 		| Struct_Initialization(var_types, str, expr_list) -> match var_types with
 			Struct(decl) ->
