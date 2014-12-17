@@ -375,7 +375,7 @@ let process_func_units (scope : symbol_table) (u : Ast.unit_decl) (formals : Sas
 					let (_, t) = b in
 					let expr = check_expr scope c in
 					let (_, t2) = expr in
-					if t <> t2
+					if t <> t2							(*stopped tests here going *)
 					then raise (Failure "while processing func units, wrong type")
 					else expr :: a
 			) [] formals el in
@@ -504,12 +504,12 @@ let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) 
 					let expr = check_expr env.scope c in
 					let (_, t2) = expr in
 					if t <> t2
-					then raise (Failure "wrong type")
+					then raise (Failure "wrong type while processing outer unit declaration")
 					else expr :: a
 			) [] f.checked_formals el in
 		let expr = check_expr env.scope e in 
 		let (_, t ) = expr in 
-		if t <> f.ftype then raise (Failure "Incorrect return type") else
+		if t <> f.ftype then raise (Failure "Incorrect return type in outer unit test") else
 		Sast.Outer_udecl(f, exprs, expr, b)
 	with Not_found -> raise (Failure ("Function not found with name " ^ f)))
 	
@@ -543,7 +543,7 @@ let check_program (p : Ast.program) =
     			(if (hd.ftype <> Void || (List.length hd.checked_formals) <> 0) then (raise (Failure "main function must be type void with no arguments")) else true)
     		else findMain tl
     in let foundMain  = findMain env.scope.functions in *)
-    (if env.found_main then structs, globals, funcs, units else (raise (Failure "No main function defined??")))
+    (if env.found_main then structs, globals, funcs, units else (raise (Failure "No main function defined.")))
 	    	(* let _ = List.iter( fun f -> if f.fname = "main" then print_string "Found main" else(*  print_string ("did not find main, found " ^ f.fname ^ "\n")) env.scope.functions in  *)
 		let _ = List.find( fun f -> f.fname = "main" ) env.scope.functions in
 		structs, globals, funcs, units
