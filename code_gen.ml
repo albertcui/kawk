@@ -37,7 +37,6 @@ let get_instance_name = function
 	| Array_Initialization(_, str, _) -> str
 	| Struct_Initialization(_, str, _) -> str
 
-(* FIX ID *)
 let rec print_expr (e : Sast.expression) = 
 	let (e, _) = e in match e with
 	Noexpr -> print_string ""
@@ -51,9 +50,9 @@ let rec print_expr (e : Sast.expression) =
 	| IntConst(i) -> Printf.printf "%d " i
 	| StrConst(str) -> Printf.printf "%s " str
 	| BoolConst(b) -> Printf.printf "%B " b
-	(* | ArrayAccess(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]"
-	| Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr
-	| Uniop(op, expr) -> print_op op; print_expr expr *)
+	(* | ArrayAccess(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]" *)
+	(* | Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr *)
+	(* | Uniop(op, expr) -> print_op op; print_expr expr *)
 	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2 
 	| Call(f, expr_list) -> 
 		if f.fname = "exit" then (print_string "System.out.println("; List.iter print_expr expr_list; print_string ");\n System.exit(0);") 
@@ -126,26 +125,7 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 				let s = List.find (fun j -> j.original_struct = decl) j_struct_decl_list in
 				print_string (String.capitalize s.sname); Printf.printf " %s = new %s(" str (String.capitalize s.sname); print_expr_list_comma expr_list; print_string ");\n"
 			| _ -> raise (Failure "shouldn't happen")
-(* 	if t <> Struct then match var_types with
-		Variable(var_types, str) -> print_var_types var_types; print_string (str ^ ";\n")
-		| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf "%s = " str; print_expr_semi expr
-		| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "[] %s = { " str; print_expr_list_comma expr_list; print_string "};\n"
-		| Struct_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "%s = { " str; print_expr expr_list; print_string "};\n"
-	else
- *)
 
-(* let print_assert_name expr = *)
-
-(* let print_asserts a =
-	(*let (expr, stmt_list) = a in
-		if List.length (stmt_list) != 0 then 
-			print_string "set"; print_assert_name expr; print_string "() {\n";
-			(* do assignment *)
-			print_string "if ( ";print_expr expr;print_string ") "; List.iter print_stmt stmt_list; print_string "}"   
-		else print_string "";*)
-
-	print_string "@("; print_expr expr; print_string ") "; List.iter print_stmt stmt_list
- *)
 (*
 	struct potato { 
 		int size; 
@@ -261,7 +241,7 @@ let print_func_decl (f : Sast.function_decl) =
 			print_string ") {\n";
 			List.iter print_var_decl f.checked_locals; 
 			List.iter print_stmt f.checked_body;
-			(* List.iter print_unit_decl f.ch0ecked_units; *)
+			(* List.iter print_unit_decl f.checked_units; *)
 			print_string "}\n"
 		)
 
