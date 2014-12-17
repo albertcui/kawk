@@ -102,7 +102,7 @@ and check_struct_assignment (scope : symbol_table) a = match a with
 	Ast.Struct_Member_Assign(stru, mem, expr) ->
 		(
 			try
-				let (decl, var_type) = check_id scope stru in match var_type with
+				let (original_decl, var_type) = check_id scope stru in match var_type with
 				| Sast.Struct(decl) ->
 					(
 						try
@@ -117,7 +117,7 @@ and check_struct_assignment (scope : symbol_table) a = match a with
 							let (_, t) = v in
 							let (_, t2) = expr in
 							if t <> t2 then raise (Failure "type assignment is wrong")
-							else Sast.Struct_Member_Assign(decl, v, expr), var_type
+							else Sast.Struct_Member_Assign(decl, original_decl, v, expr), var_type
 						with Not_found -> raise (Failure (mem ^ " not found in struct " ^ stru))
 					)
 				| _ -> raise (Failure (stru ^ " is not a struct."))
@@ -202,7 +202,7 @@ and check_call (scope : symbol_table) c = match c with
 
 and check_access (scope : symbol_table) a = match a with
 	Ast.Access(id, id2) ->
-		(let (_, t) = check_id scope id in match t with
+		(let (original_decl, t) = check_id scope id in match t with
 			Struct(decl) ->
 				(try
 					let var = List.find (
@@ -218,7 +218,7 @@ and check_access (scope : symbol_table) a = match a with
 						| Variable_Initialization(t, _, _) -> t
 						| Array_Initialization(t, _, _) -> t
 						| Struct_Initialization(t, _, _) -> t
-					in Sast.Access(decl, var), t
+					in Sast.Access(decl, original_decl, var), t
 				with Not_found -> raise (
 					Failure (id ^ " is type struct " ^ decl.sname ^ " which does not have a member named " ^ id2)
 				))
@@ -322,9 +322,9 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 						| Struct_Initialization(t, _, _) -> t in
 						let e = check_expr scope c in
 						let (_, t2) = e in
-						if t <> t2 then raise (Failure "types are not the same") else e :: a
+						if t <> t2 then raise (Failure "types are not the same in struct initialization") else e :: a
 					) [] decl.variable_decls el in (name, Sast.Struct_Initialization(t, name, el), t)
-				| _ -> raise (Failure "Not a struct") in
+				| _ -> raise (Failure "Not a struct") in (*test?*)
 	let (_, decl, t) = triple in
 	if t = Void then
 		raise (Failure "Variable cannot be type void.")
@@ -339,7 +339,7 @@ let rec check_func_stmt (scope : symbol_table) (stml : Sast.stmt list) (ftype : 
 			check_func_stmt scope sl ftype
 		| Sast.Return(e) -> 
 			let (_, t) = e in 
-			if t <> ftype then raise (Failure "return type is incorrect") else ()
+			if t <> ftype then raise (Failure "func return type is incorrect") else ()
 		| Sast.If(_, s1, s2) -> 
 			check_func_stmt scope [s1] ftype; check_func_stmt scope [s2] ftype
 		| Sast.For(_, _, _, s) ->
@@ -357,7 +357,7 @@ let process_func_stmt (scope : symbol_table) (stml : Ast.stmt list) (ftype : Sas
 			check_func_stmt scope sl ftype; stmt :: a
 		| Sast.Return(e) -> 
 			let (_, t) = e in 
-			if t <> ftype then raise (Failure "return type is incorrect") else
+			if t <> ftype then raise (Failure "while processing func statement, return type incorrect") else
 			scope.return_found <- true; stmt :: a 
 		| Sast.If(_, s1, s2) -> 
 			check_func_stmt scope [s1] ftype; check_func_stmt scope [s2] ftype; stmt :: a
@@ -375,13 +375,13 @@ let process_func_units (scope : symbol_table) (u : Ast.unit_decl) (formals : Sas
 					let (_, t) = b in
 					let expr = check_expr scope c in
 					let (_, t2) = expr in
-					if t <> t2
-					then raise (Failure "wrong type")
+					if t <> t2							(*stopped tests here going *)
+					then raise (Failure "while processing func units, wrong type")
 					else expr :: a
 			) [] formals el in
 		let expr = check_expr scope e in 
 		let (_, t ) = expr in 
-		if t <> ftype then raise (Failure "Incorrect return type") else
+		if t <> ftype then raise (Failure "while processing func units, incorrect return type") else
 		Sast.Local_udecl(exprs, expr, b)
 	| Outer_udecl (f, el, e, b) ->
 	(try
@@ -504,12 +504,12 @@ let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) 
 					let expr = check_expr env.scope c in
 					let (_, t2) = expr in
 					if t <> t2
-					then raise (Failure "wrong type")
+					then raise (Failure "wrong type while processing outer unit declaration")
 					else expr :: a
 			) [] f.checked_formals el in
 		let expr = check_expr env.scope e in 
 		let (_, t ) = expr in 
-		if t <> f.ftype then raise (Failure "Incorrect return type") else
+		if t <> f.ftype then raise (Failure "Incorrect return type in outer unit test") else
 		Sast.Outer_udecl(f, exprs, expr, b)
 	with Not_found -> raise (Failure ("Function not found with name " ^ f)))
 	
@@ -543,7 +543,7 @@ let check_program (p : Ast.program) =
     			(if (hd.ftype <> Void || (List.length hd.checked_formals) <> 0) then (raise (Failure "main function must be type void with no arguments")) else true)
     		else findMain tl
     in let foundMain  = findMain env.scope.functions in *)
-    (if env.found_main then structs, globals, funcs, units else (raise (Failure "No main function defined??")))
+    (if env.found_main then structs, globals, funcs, units else (raise (Failure "No main function defined.")))
 	    	(* let _ = List.iter( fun f -> if f.fname = "main" then print_string "Found main" else(*  print_string ("did not find main, found " ^ f.fname ^ "\n")) env.scope.functions in  *)
 		let _ = List.find( fun f -> f.fname = "main" ) env.scope.functions in
 		structs, globals, funcs, units

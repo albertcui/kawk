@@ -1,0 +1,7 @@
+void print(){
+	
+}
+
+void main(){
+	
+}
