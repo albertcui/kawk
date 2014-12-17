@@ -1,6 +1,6 @@
 # kAWK "kay-awk" (formerly: GAWK)
-
 ## The Testing Language
+
 
 ## Team members: 
 * Albert Cui (System Architect)
@@ -8,25 +8,25 @@
 * Michael Raimi (Testing and Validation/Language Guru)
 * Mei-Vern Then (System Architect/Language Guru)
 
-## To build and clean up:
+### To build and clean up:
 
 make
 
 make clean
 
-## Test suite (in test program):
+### Test suite (in test program):
 
 ./test_suite.sh
 
-## Pretty printer:
+### Pretty printer:
 
 ./pretty testprogram.k
 
-## Code generator:
+### Code generator:
 
 ./code_gen testprogram.k
 
-## To see output from any program, include a input redirect:
+### To see output from any program, include a input redirect:
 
 ./code_gen < testprogram.k
 
