@@ -81,24 +81,27 @@ and check_struct_assignment (scope : symbol_table) a = match a with
 	Ast.Struct_Member_Assign(stru, mem, expr) ->
 		(
 			try
-				let s = find_struct scope.structs stru in
-				(
-					try
-						let v = List.find(
-							fun (v, _) -> match v with
-							Variable(_, s) -> s = mem
-							| Variable_Initialization(_, s, _) -> s = mem
-							| Array_Initialization(_, s, _) -> s = mem
-							| Struct_Initialization(_, s, _) -> s = mem
-						) s.variable_decls in
-						let expr = check_expr scope expr in
-						let (_, t) = v in
-						let (_, t2) = expr in
-						if t <> t2 then raise (Failure "type assignment is wrong")
-						else Sast.Struct_Member_Assign(s, v, expr), t
-					with Not_found -> raise (Failure (mem ^ " not found in struct " ^ stru))
-				)
-			with Not_found -> raise (Failure ("Struct " ^ stru ^ " not declared."))
+				let (decl, var_type) = check_id scope stru in match var_type with
+				| Sast.Struct(decl) ->
+					(
+						try
+
+							let v = List.find(
+								fun (v, _) -> match v with
+								Variable(_, s) -> s = mem
+								| Variable_Initialization(_, s, _) -> s = mem
+								| Array_Initialization(_, s, _) -> s = mem
+								| Struct_Initialization(_, s, _) -> s = mem
+							) decl.variable_decls in
+							let expr = check_expr scope expr in
+							let (_, t) = v in
+							let (_, t2) = expr in
+							if t <> t2 then raise (Failure "type assignment is wrong")
+							else Sast.Struct_Member_Assign(decl, v, expr), var_type
+						with Not_found -> raise (Failure (mem ^ " not found in struct " ^ stru))
+					)
+				| _ -> raise (Failure (stru ^ " is not a struct."))
+			with Not_found -> raise (Failure ("Variable " ^ stru ^ " not declared."))
 		)
 	| _ -> raise (Failure "Not a struct assignment")
 
