@@ -29,8 +29,19 @@
 %%
 
 program:
-	/* nothing */ 	{ [], [], [], [] }
-	| program sdecl vdecl fdecl udecl { let (str, var, func, unt) = $1 in $2::str, $3::var, $4::func, $5::unt }
+	sdecl_list vdecl_list fdecl_list udecl_list { $1, $2, $3, $4 }
+
+sdecl_list:
+	/* nothing */ { [] }
+	| sdecl_list sdecl { $2 :: $1 }
+
+fdecl_list:
+	/* nothing */ { [] }
+	| fdecl_list fdecl { $2 :: $1 }
+
+udecl_list:
+	/* nothing */ { [] }
+	| udecl_list udecl { $2 :: $1 }
 
 fdecl:
 	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list udecl_list RBRACE
