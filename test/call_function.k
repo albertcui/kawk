@@ -1,8 +1,8 @@
-int main(){
+int foo(){
+	return 0;
+}
+void main(){
 	int a;
 	a = 3;
-	return a;
-}
-int main2(){
-	main();
+	foo();
 }
