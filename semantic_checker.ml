@@ -380,14 +380,14 @@ let check_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
 	let statements = process_func_stmt scope' f.body t in 
 	let units = List.fold_left ( fun a u -> process_func_units scope' u formals t :: a) [] f.units in
-	if env.scope.return_found then 
+	if scope'.return_found then 
 		let f = { ftype = t; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
 		env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
-	else if f.ftype = Void then 
+	else (if f.ftype = Void then 
 		let f = { ftype = t; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
 			env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
 	else
-		raise (Failure ("No return for function " ^ f.fname ^ " when return expected."))
+		raise (Failure ("No return for function " ^ f.fname ^ " when return expected.")))
 
 let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	try

@@ -1,5 +1,4 @@
-# kAWK "kay-awk" 
-#(formerly: GAWK)
+# kAWK "kay-awk" (formerly: GAWK)
 
 ## The Testing Language
 
