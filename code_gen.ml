@@ -85,7 +85,9 @@ let rec print_expr (e : Sast.expression) =
 		if (List.length var.asserts) <> 0 then (print_string (get_instance_name instance); print_string (".set_" ^ var.name ^ "("); print_expr expr; print_string ")")
 		else
 			(print_string (get_instance_name instance); print_string "."; print_string (var.name ^ "="); print_expr_semi expr)
-	| _ -> print_string ""
+	| Array_Member_Assign (decl, idx, expr) -> 
+		print_string (get_instance_name decl); print_string ("["); print_expr expr; print_string("] = "); print_expr expr
+	(* | _ -> print_string "" *)
 and print_expr_semi (e : Sast.expression) = 
 	print_expr e; print_string ";\n"
 
@@ -137,43 +139,6 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 				print_string (String.capitalize s.sname); Printf.printf " %s = new %s(" str (String.capitalize s.sname); print_expr_list_comma expr_list; print_string ");\n"
 			| _ -> raise (Failure "shouldn't happen")
 
-(*
-	struct potato { 
-		int size; 
-		int potat; 
-		@(potate<2 ) 
-			{print "Asdasldkfasd"}
-		int j;
-		@(potato == 1 ) {print "ASfdasdfas"}
-	}
-
-
- 	public class Potato {
-		 int size;
-		 int potat;
-
-		public Blah(size,potat){
-			this.size = size;
-			this.potat = potat;
-		}
-
-		public getSize(){
-			return size;
-		}
-		public setSize(int size){
-			this.size = size;
-			if (this.size>1){
-				return ("AHH THIS IS > 1");
-			}
-		}
-		public getPotat(){
-			return size;
-		}
-		public setPotat(int potat){
-			this.potat = potat;
-		}
- 	}
-*)
 let rec print_function_params (v : Jast.j_var_struct_decl list) = match v with
 	[] -> print_string "";
 	| hd::[] -> print_param hd.the_variable;
