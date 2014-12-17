@@ -1,5 +1,5 @@
 #/bin/bash
 
-./code_gen < "$2" > "Program.java" 2>&1
+./code_gen < "$1" > "Program.java" 2>&1
 javac "Program.java"
-java "Program" > "output_java_$2.txt" 2>&1
+java "Program" | tee  "output_java_$1.txt" 2>&1
