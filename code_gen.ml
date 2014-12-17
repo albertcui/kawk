@@ -61,17 +61,26 @@ let rec print_stmt = function
 	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr_semi expr1; print_expr_semi expr2; let (expr_detail, _) = expr3 in print_expr expr_detail; print_stmt stmt 
 	| While(expr, stmt) -> print_string "while ("; print_expr_semi expr; print_string ")"; print_stmt stmt
 
-(* CHANGE: CANNOT DECLARE VARIABLE AS VOID *)
-(* DID NOT CHECK IF ARRAY(VAR_TYPES, EXPR) WHERE EXPR IS INT
-   JAST should redecine var_types so that struct of struct_decl and array expr of expr_detail *)
 let rec print_var_types = function
 	Void -> print_string "void "
 	| Int -> print_string "int "
 	| String -> print_string "String " 
 	| Boolean -> print_string "boolean "
-	(* | Struct(str) -> Printf.printf "public class %s " str  *)
-	(* | Array(var_types, expr) -> print_var_types var_types; print_string "["; print_expr expr; print_string "] " *)
+	| Struct(s) -> Printf.printf "%s " (String.capitalize s.sname) 
+	| Array(var_types, expr) ->
+		print_var_types var_types;
+		print_string "[";
+		let (detail, _) = expr in print_expr detail;
+		print_string "] "
  
+ let print_param v =
+	let (var_types, _) = v in match var_types with
+	Variable(var_types, str) -> print_var_types var_types; print_string str
+	(* if not a Variable we drop the unnecessary stuff *)
+	| Variable_Initialization(var_types, str, _) -> print_var_types var_types; print_string str
+	| Array_Initialization(var_types, str, _) -> print_var_types var_types; print_string str
+	| Struct_Initialization(var_types, str, _) -> print_var_types var_types; print_string str
+
 let rec print_var_decl  (v : Sast.variable_decl) =
 	let (var_types, _) = v in match var_types with
 		Variable(var_types, str) -> print_var_types var_types; print_string (str ^ ";\n")
@@ -128,24 +137,48 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 		}
  	}
 *)
+let rec print_function_params (v : Jast.j_var_struct_decl list) = match v with
+	[] -> print_string "";
+	| hd::[] -> print_param hd.the_variable;
+	| hd::tl -> print_param hd.the_variable; print_string ", "; print_function_params tl
 
-(* let print_struct_decl (j : Jast.j_var_struct_decl) =
-	let List.iter (fun ) *)
+let print_asserts a_list =
+	List.iter (
+		fun (expr, stmt_list) ->
+			let (expr, _) = expr in
+			print_string "if(!(";
+			print_expr expr;
+			print_string ")){\n";
+			List.iter ( fun s ->
+				print_stmt s; print_string "\n"
+			) stmt_list;
+			print_string "}\n"
+	) a_list
 
-(* FIX THIS *)
-(* let print_struct_decl s =
-	if s.sname = "main" then 
-		print_string "public static void main(String[] args) {\n";
-		List.iter print_var_decl s.variable_decls;
-		List.iter print_asserts s.asserts;
-		print_string "}"
-	else
-		print_string "public class ";
-		print_string s.sname; 
-		print_string " {\n";
-		List.iter print_var_decl s.variable_decls;
-		List.iter print_asserts s.asserts;
-		print_string "}" *)
+let print_j_var_decl (dec : j_var_struct_decl) =
+	print_var_decl dec.the_variable;
+	if (List.length dec.asserts) <> 0 then
+		(
+			print_string("\npublic set_" ^ dec.name ^ "(");
+			print_param dec.the_variable;
+			print_string "){\n";
+			print_string ("this." ^ dec.name ^ "=" ^ dec.name ^ ";\n");
+			print_asserts dec.asserts
+		)
+	else ()
+
+let print_constructors (name : string) (s : Jast.j_var_struct_decl list) =
+	print_string ("public " ^ (String.capitalize name) ^ "(");
+	print_function_params s
+
+let print_struct_decl (s : Jast.j_struct_decl) =
+	print_string "class ";
+	print_string s.sname;
+	print_string " {\n";
+	List.iter print_j_var_decl s.variable_decls;
+	(* Make the constructors *)
+	print_constructors s.sname s.variable_decls;
+	print_string "}"
 	
  (* let print_unit_decl = function
 	Local_udecl(udecl_params, udecl_check_val, true) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
@@ -154,10 +187,6 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 	| Outer_udecl(str, udecl_params, udecl_check_val, false) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
  *)
 
-let print_param v =
-	let (var_types, _) = v in match var_types with
-	Variable(var_types, str) -> print_var_types var_types; print_string str
-	| _ -> raise (Failure "This should never happen")
 
 let rec print_param_list (p : Sast.variable_decl list) = match p with
 	[] -> print_string "";
@@ -186,7 +215,7 @@ let code_gen j =
 	let (structs, vars, funcs, unts) = j in
 			(* List.iter print_struct_decl structs; *)
 			List.iter print_var_decl vars;
-			List.iter print_func_decl (List.rev funcs);
+			(* List.iter print_func_decl (List.rev funcs); *)
 			(* List.iter print_unit_decl unts; *)
 			print_string "\n}"
 
