@@ -25,15 +25,21 @@ let print_op = function
 (* FIX ID *)
 let rec print_expr (e : Sast.expr_detail) = match e with
 	Noexpr -> print_string ""
-	(* | Id(id) -> print_var_decl id *)
+	| Id(decl) -> let str = match decl with
+		Variable(_, str) -> str
+		(* if not a Variable we drop the unnecessary stuff *)
+		| Variable_Initialization(_, str, _) -> str
+		| Array_Initialization(_, str, _) -> str
+		| Struct_Initialization(_, str, _) -> str in
+		print_string str
 	| IntConst(i) -> Printf.printf "%d " i
 	| StrConst(str) -> Printf.printf "%s " str
 	| BoolConst(b) -> Printf.printf "%B " b
-(* 	| ArrayAccess(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]"
+	(* | ArrayAccess(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]"
 	| Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr
-	| Uniop(op, expr) -> print_op op; print_expr expr
+	| Uniop(op, expr) -> print_op op; print_expr expr *)
 	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2 
-	| Call(f, expr_list) -> 
+	(* | Call(f, expr_list) -> 
 		(if f.fname = "print" then print_string "System.out.println("
 		else Printf.printf "%s(" f.fname);
 		let rec print_expr_list_comma = function
