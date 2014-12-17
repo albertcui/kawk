@@ -57,7 +57,7 @@ vdecl_list:
 	| vdecl_list vdecl 	{ $2 :: $1 }
 
 vdecl:
-	the_type LBRACK RBRACK ID ASSIGN LBRACE expr_list RBRACE SEMI { Array_Initialization($1, $4, List.rev $7) }
+	the_type LBRACK RBRACK ID ASSIGN LBRACE expr_list RBRACE SEMI { Array_Initialization(Array($1, Noexpr), $4, List.rev $7) }
 	| the_type ID SEMI { Variable($1, $2) }
 	| the_type ID ASSIGN expr SEMI { Variable_Initialization($1, $2, $4) }
 	| the_type ID ASSIGN LBRACE expr_list RBRACE SEMI { Struct_Initialization($1, $2, List.rev $5) }
