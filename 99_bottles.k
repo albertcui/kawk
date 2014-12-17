@@ -12,13 +12,13 @@
   	int bottles_of_beer;
  	@(!(bottles_of_beer > 0)) { 
  			print(bottles_of_beer); 
- 			print("bottles of beer on the wall. take one down , pass it around");
+ 			print("bottles of beer on the wall.")
+ 			print(bottles_of_beer); 
+ 			print("bottles of beer. take one down , pass it around");
  			print(bottles_of_beer-1);
  			print("bottles of beer on the wall.");
  	}
  }
-
-
 
  void main() {
  	unit:run_99_bott(99):equals(0):accept;
