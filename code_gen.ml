@@ -74,7 +74,7 @@ let rec print_expr (e : Sast.expression) =
 				[] -> print_string ""
 				| e::[] -> print_expr e
 				| e::tl -> print_expr e; print_string ", "; print_expr_list_comma tl 
-				in print_expr_list_comma expr_list; print_string ")")
+				in print_expr_list_comma (List.rev expr_list); print_string ")")
 	| Access(struc, instance, decl) -> 
 		let j_s_decl = List.find ( fun j -> j.original_struct = struc) j_struct_decl_list in
 		let var = List.find ( fun j_v -> let (v, _) = j_v.the_variable in v = decl) j_s_decl.variable_decls in
@@ -97,7 +97,7 @@ let rec print_expr_list_comma (el : Sast.expression list) = match el with
 	| hd::tl -> print_expr hd; print_string ", "; print_expr_list_comma tl 
 
 let rec print_stmt = function
-	Block(stmt_list) -> print_string "{";  List.iter print_stmt stmt_list; print_string "}\n"
+	Block(stmt_list) -> print_string "{";  List.iter print_stmt (List.rev stmt_list); print_string "}\n"
 	| Expr(expr) -> print_expr_semi expr
 	| Return(expr) -> print_string "return "; print_expr_semi expr
 	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr expr; print_string ") "; print_stmt stmt1; print_string "else "; print_stmt stmt2
@@ -132,7 +132,7 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 				print_string (String.capitalize s.sname); Printf.printf " %s = new %s();\n" str (String.capitalize s.sname)
 			| _ -> print_var_types var_types; print_string (str ^ ";\n"))
 		| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf "%s = " str; print_expr_semi expr
-		| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "[] %s = { " str; print_expr_list_comma expr_list; print_string "};\n"
+		| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "[] %s = { " str; print_expr_list_comma (List.rev expr_list); print_string "};\n"
 		| Struct_Initialization(var_types, str, expr_list) -> match var_types with
 			Struct(decl) ->
 				let s = List.find (fun j -> j.original_struct = decl) j_struct_decl_list in
@@ -213,7 +213,7 @@ let print_func_decl (f : Sast.function_decl) =
 			print_var_types f.ftype;
 			print_string f.fname; 
 			print_string "(";
-			print_param_list f.checked_formals; 
+			print_param_list (List.rev f.checked_formals); 
 			print_string ") {\n";
 			List.iter print_var_decl (List.rev f.checked_locals); 
 			List.iter print_stmt (List.rev f.checked_body);
@@ -224,10 +224,10 @@ let print_func_decl (f : Sast.function_decl) =
 let code_gen j =
 	let _ = print_string "public class Program {\n\n\t" in
 	let (structs, vars, funcs, unts) = j in
-			List.iter print_struct_decl structs;
-			List.iter print_var_decl vars;
+			List.iter print_struct_decl (List.rev structs);
+			List.iter print_var_decl (List.rev vars);
 			List.iter print_func_decl (List.rev funcs);
-			List.iter print_unit_decl unts;
+			List.iter print_unit_decl (List.rev unts);
 			print_string "\n}\n"
 
 let _ =	
