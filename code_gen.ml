@@ -56,7 +56,6 @@ let rec print_expr (e : Sast.expression) =
 	| StrConst(str) -> Printf.printf "%s " str
 	| BoolConst(b) -> Printf.printf "%B " b
 	| ArrayAccess(checked_var_decl, expr) -> (*Printf.printf "%s[" str;*)Printf.printf"asdf"; print_checked_var_decl checked_var_decl; print_expr expr; print_string "]"
-	(* JANKY FIX FOR WHERE EQUALS IS??*)
 	| Assign(decl, expr) -> let str = match decl with
 		Variable(_, str) -> str
 		(* if not a Variable we drop the unnecessary stuff *)
@@ -76,10 +75,10 @@ let rec print_expr (e : Sast.expression) =
 				| e::[] -> print_expr e
 				| e::tl -> print_expr e; print_string ", "; print_expr_list_comma tl 
 				in print_expr_list_comma expr_list; print_string ")")
-	(* | Access(struc, decl) -> *)
-(* 		let j_s_decl = List.find ( fun j -> j.original_struct = struc) j_struct_decl_list in
-		let var = List.find ( fun j_v -> j_v.the_variable = decl) j_s_decl in
-		if (List.length var.asserts) <> 0 then  *)
+	| Access(struc, instance, decl) -> 
+		let j_s_decl = List.find ( fun j -> j.original_struct = struc) j_struct_decl_list in
+		let var = List.find ( fun j_v -> let (v, _) = j_v.the_variable in v = decl) j_s_decl.variable_decls in
+		print_string (get_instance_name instance); print_string("."^var.name)
 	| Struct_Member_Assign(struc, instance, decl, expr) ->
 		let j_s_decl = List.find ( fun j -> j.original_struct = struc) j_struct_decl_list in
 		let var = List.find ( fun j_v -> j_v.the_variable = decl) j_s_decl.variable_decls in
