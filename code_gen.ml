@@ -37,6 +37,11 @@ let get_instance_name = function
 	| Array_Initialization(_, str, _) -> str
 	| Struct_Initialization(_, str, _) -> str
 
+let print_checked_var_decl = function
+	Variable(checked_var_decl, str) -> Printf.printf "%s[" str
+	| _ -> Printf.printf "adsf"
+
+
 let rec print_expr (e : Sast.expression) = 
 	let (e, _) = e in match e with
 	Noexpr -> print_string ""
@@ -50,7 +55,7 @@ let rec print_expr (e : Sast.expression) =
 	| IntConst(i) -> Printf.printf "%d " i
 	| StrConst(str) -> Printf.printf "%s " str
 	| BoolConst(b) -> Printf.printf "%B " b
-	(* | ArrayAccess(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]" *)
+	| ArrayAccess(checked_var_decl, expr) -> (*Printf.printf "%s[" str;*)Printf.printf"asdf"; print_checked_var_decl checked_var_decl; print_expr expr; print_string "]"
 	(* JANKY FIX FOR WHERE EQUALS IS??*)
 	| Assign(decl, expr) -> let str = match decl with
 		Variable(_, str) -> str
