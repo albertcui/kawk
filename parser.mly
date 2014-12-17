@@ -155,7 +155,7 @@ expr:
 	| ID ACCESS ID ASSIGN expr      { Struct_Member_Assign($1, $3, $5)}
 	| LPAREN expr RPAREN 			{ $2 }
 	| ID LBRACK expr RBRACK         { Array_access($1, $3) }
-
+	| ID LBRACK expr RBRACK ASSIGN expr 	{ Array_Member_Assign($1, $3, $6) }
 actuals_opt:
 	/* nothing */ 	{ [] }
 	| actuals_list 	{ List.rev $1 }
