@@ -35,6 +35,7 @@ let rec print_expr = function
 	| hd::tl -> print_expr hd; print_string ", "; print_expr_list_comma tl 
 	in print_expr_list_comma expr_list; print_string ") "
 	| Access(str1, str2) -> Printf.printf "%s.%s " str1 str2 
+	| Struct_Member_Assign(str1, str2, expr) -> Printf.printf "%s" str1; print_string "."; Printf.printf "%s = " str2; print_expr expr
 
 let rec print_expr_list_comma = function
 	[] -> print_string ""
@@ -86,6 +87,7 @@ let print_struct_decl s =
 	List.iter print_var_decl s.variable_decls;
 	List.iter print_asserts s.asserts;
 	print_string "}"
+ 	
 	
 let print_unit_decl = function
 	Local_udecl(udecl_params, udecl_check_val, true) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
