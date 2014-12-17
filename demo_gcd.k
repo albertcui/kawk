@@ -1,16 +1,14 @@
-struct gcd {
-  	int a; 
-  	int b;
-  	int result;
- 	@(!(a > b))  { a=a-b; }
- 	@(!(a < b))  { b=b-a; }
- 	@(!(a == a)) { print("gcd is"); print(a); result=a; }
- }
-
- int run_gcd (int a, int b) {
- 	struct gcd gg = { a, b, 0 };
- 	return gg.result;
- }
+int run_gcd (int a, int b) {
+	while (a != b) {
+		if (a > b) {
+			a = a-b;
+		}
+		else {
+			b = b-a;
+		}
+	}
+	return a;
+}
 
   void main() {
  	unit:run_gcd(24, 54):equals(6):accept;

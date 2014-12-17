@@ -102,7 +102,7 @@ let rec print_stmt = function
 	| Return(expr) -> print_string "return "; print_expr_semi expr
 	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr expr; print_string ") "; print_stmt stmt1; print_string "else "; print_stmt stmt2
 	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr_semi expr1; print_expr_semi expr2; print_expr expr3; print_string ")"; print_stmt stmt;  
-	| While(expr, stmt) -> print_string "while ("; print_expr_semi expr; print_string ")"; print_stmt stmt
+	| While(expr, stmt) -> print_string "while ("; print_expr expr; print_string ")"; print_stmt stmt
 
 let rec print_var_types = function
 	Void -> print_string "void "
