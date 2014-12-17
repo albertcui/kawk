@@ -164,7 +164,7 @@ and check_call (scope : symbol_table) c = match c with
 				if id = "print" then match el with
 					| hd :: []-> let expr = check_expr scope hd in
 						let (_, t) = expr in
-						if t = String then Sast.Call(the_print_function, [expr]), Ast.Void else raise (Failure "Print takes only type string")
+						if (t = String || t = Int) then Sast.Call(the_print_function, [expr]), Ast.Void else raise (Failure "Print takes only type string or int")
 					| _ -> raise (Failure "Print only takes one argument")  
 				else if id = "exit" then match el with
 					| hd :: []-> let expr = check_expr scope hd in
