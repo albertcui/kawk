@@ -301,14 +301,16 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 			let expr = check_expr scope expr in
 			let (_, t2 ) = expr in
 			if t <> t2 then raise (Failure "wrong type for variable initialization") else (name, Sast.Variable_Initialization(t, name, expr), t) 
-		| Array_Initialization(t, name, el) ->
-			let t = check_var_type scope t in
-			let el = List.fold_left (
-				fun a elem ->
-				let expr = check_expr scope elem in 
-				let (_, t2 ) = expr in 
-				if t <> t2 then raise (Failure "wrong type for array initilization") else expr :: a
-			) [] el in (name, Sast.Array_Initialization(t, name, List.rev el), t)
+		| Array_Initialization(t, name, el) -> (match t with
+			Ast.Array(v, expr) ->  
+				let t = check_var_type scope v in
+				let el = List.fold_left (
+					fun a elem ->
+					let expr = check_expr scope elem in 
+					let (_, t2 ) = expr in 
+					if t <> t2 then raise (Failure "wrong type for array initilization") else expr :: a
+				) [] el in (name, Sast.Array_Initialization(Sast.Array(t, (Noexpr, Void)), name, List.rev el), Sast.Array(t, (Noexpr, Void)))
+			| _ -> raise (Failure "Not an arrary!"))
 		| Struct_Initialization(t, name, el) ->
 			let t = check_var_type scope t in match t with
 				Struct(decl) -> 
