@@ -227,7 +227,7 @@ let print_constructors (name : string) (s : Jast.j_var_struct_decl list) =
 let print_struct_decl (s : Jast.j_struct_decl) =
 	print_string "static class ";
 	print_string (String.capitalize s.sname);
-	print_string " {\n";
+	print_string " {\n\t\t";
 	List.iter print_j_var_decl s.variable_decls;
 	(* Make the constructors *)
 	print_constructors s.sname s.variable_decls;
@@ -266,7 +266,7 @@ let print_func_decl (f : Sast.function_decl) =
 		)
 
 let code_gen j =
-	let _ = print_string "public class Program {\n" in
+	let _ = print_string "public class Program {\n\n\t" in
 	let (structs, vars, funcs, unts) = j in
 			List.iter print_struct_decl structs;
 			List.iter print_var_decl vars;
