@@ -39,14 +39,16 @@ let rec print_expr (e : Sast.expr_detail) = match e with
 	| Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr
 	| Uniop(op, expr) -> print_op op; print_expr expr *)
 	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2 
-	(* | Call(f, expr_list) -> 
-		(if f.fname = "print" then print_string "System.out.println("
-		else Printf.printf "%s(" f.fname);
-		let rec print_expr_list_comma = function
-			[] -> print_string ""
-			| (e, _)::[] -> print_expr e
-			| (e, _)::tl -> print_expr e; print_string ", "; print_expr_list_comma tl 
-			in print_expr_list_comma expr_list; print_string ") " *)
+(* 	| Call(f, expr_list) -> 
+		if f.fname = "exit" then print_string ("System.out.println("; print_expr expr_list; print_string ");\n System.exit(0);" ) 
+		else
+			(if f.fname = "print" then print_string "System.out.println("
+			else Printf.printf "%s(" f.fname);
+			let rec print_expr_list_comma = function
+				[] -> print_string ""
+				| (e, _)::[] -> print_expr e
+				| (e, _)::tl -> print_expr e; print_string ", "; print_expr_list_comma tl 
+				in print_expr_list_comma expr_list; print_string ") " *)
 	(* | Access(str1, str2) -> Printf.printf "%s.%s " str1 str2  *)
 	| _ -> print_string ""
 
