@@ -1,1 +1,3 @@
-str x = "Hello World";
+void main(){
+	str x = "Hello World";
+}

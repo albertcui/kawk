@@ -1,5 +1,4 @@
-int main(){
+void main(){
 	int a;
 	a = foo();
-	return 0;
 }

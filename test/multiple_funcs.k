@@ -1,2 +1,2 @@
-int main(){return 0;}
-int main2(){return 0;}
+int foo(){return 0;}
+void main(){}
