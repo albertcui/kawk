@@ -55,7 +55,7 @@ let rec print_expr (e : Sast.expression) =
 	| IntConst(i) -> Printf.printf "%d " i
 	| StrConst(str) -> Printf.printf "%s " str
 	| BoolConst(b) -> Printf.printf "%B " b
-	| ArrayAccess(checked_var_decl, expr) -> (*Printf.printf "%s[" str;*)Printf.printf"asdf"; print_checked_var_decl checked_var_decl; print_expr expr; print_string "]"
+	| ArrayAccess(checked_var_decl, expr) -> print_string(get_instance_name checked_var_decl); print_string "["; print_expr expr; print_string "]"
 	| Assign(decl, expr) -> let str = match decl with
 		Variable(_, str) -> str
 		(* if not a Variable we drop the unnecessary stuff *)
@@ -203,9 +203,9 @@ let rec print_param_list (p : Sast.variable_decl list) = match p with
 let print_func_decl (f : Sast.function_decl) =
 	if f.fname = "main" then 
 		(print_string "public static void main(String[] args) {\n";
-		List.iter print_var_decl f.checked_locals;
-		List.iter print_stmt f.checked_body;
-		List.iter print_unit_decl f.checked_units; 
+		List.iter print_var_decl (List.rev f.checked_locals);
+		List.iter print_stmt (List.rev f.checked_body);
+		List.iter print_unit_decl (List.rev f.checked_units); 
 		print_string "}")
 	else
 		(
@@ -215,9 +215,9 @@ let print_func_decl (f : Sast.function_decl) =
 			print_string "(";
 			print_param_list f.checked_formals; 
 			print_string ") {\n";
-			List.iter print_var_decl f.checked_locals; 
-			List.iter print_stmt f.checked_body;
-			List.iter print_unit_decl f.checked_units; 
+			List.iter print_var_decl (List.rev f.checked_locals); 
+			List.iter print_stmt (List.rev f.checked_body);
+			List.iter print_unit_decl (List.rev f.checked_units); 
 			print_string "}\n"
 		)
 
