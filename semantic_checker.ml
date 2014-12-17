@@ -32,6 +32,15 @@ let the_print_function = {
 	checked_units = []
 }
 
+let the_exit_function = {
+	ftype = Ast.Void;  
+	fname = "exit"; 
+	checked_formals = [];
+	checked_locals = [];
+	checked_body = [];
+	checked_units = []	
+}
+
 let find_struct (s : struct_decl list) stru =
 	List.find(fun c -> c.sname = stru) s
 
@@ -131,7 +140,14 @@ and check_call (scope : symbol_table) c = match c with
 						let (_, t) = expr in
 						if t = String then Sast.Call(the_print_function, [expr]), Ast.Void else raise (Failure "Print takes only type string")
 					| _ -> raise (Failure "Print only takes one argument")  
-				else (if id = "main" then raise (Failure "Cannot fall main function") else raise (Failure ("Function not found with name " ^ id)))
+				else if id = "exit" then match el with
+					| hd :: []-> let expr = check_expr scope hd in
+						let (_, t) = expr in
+						if t = String then Sast.Call(the_exit_function, [expr]), Ast.Void else raise (Failure "Exit takes only type string")
+					| _ -> raise (Failure "Exit only takes one argument")
+				else if id = "main" then 
+					raise (Failure "Cannot fall main function")
+				else raise (Failure ("Function not found with name " ^ id))
 		)
 	| _ -> raise (Failure "Not a call")	
 
