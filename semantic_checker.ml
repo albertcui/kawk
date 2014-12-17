@@ -252,7 +252,7 @@ let rec check_var_type (scope : symbol_table) (v : Ast.var_types) = match v with
 		let v = check_var_type scope v in
 		let expr = check_expr scope expr in
 		let (_, t) = expr in
-		if t <> Int then raise (Failure "Array must have integer size.")
+		if t <> Int then raise (Failure "Array size must have integer.")
 		else Sast.Array(v, expr) 
 
 let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
