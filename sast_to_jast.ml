@@ -16,7 +16,7 @@ let rec check_j_in_a (j : Sast.variable_decl) (e : Sast.expression) =
 			| [] -> false
 			| hd::tl -> if check_j_in_a j e then true else check_list tl in
 			check_list expr_list
-		| Access(_, var) -> if var = the_variable then true else false
+		| Access(_, _,var) -> if var = the_variable then true else false
 		| Uniop (_, expr) -> check_j_in_a j expr
 		| Binop (expr1, _, expr2) -> check_j_in_a j expr1 || check_j_in_a j expr2 
 		| Assign (var, expr) -> if var = the_variable then true else check_j_in_a j expr
