@@ -26,7 +26,6 @@ let print_op = function
 let rec print_expr (e : Sast.expr_detail) = match e with
 	Noexpr -> print_string ""
 	| This -> print_string "this "
-	| Null -> print_string "null "
 	(* | Id(id) -> print_var_decl id *)
 	| IntConst(i) -> Printf.printf "%d " i
 	| StrConst(str) -> Printf.printf "%s " str

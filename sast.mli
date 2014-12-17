@@ -32,7 +32,6 @@ and struct_decl = {
 and expr_detail =
 	Noexpr
 	| This
-	| Null
 	| IntConst of int
 	| StrConst of string
 	| BoolConst of bool

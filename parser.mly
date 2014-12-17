@@ -3,7 +3,7 @@
 %token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA
 %token MINUS TIMES DIVIDE MOD STRING INT EOF OR AND NOT PLUS
 %token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL
-%token ACCESS STRUCT ASSERT UNIT THIS NULL VOID EQUALS ACCEPT REJECT
+%token ACCESS STRUCT ASSERT UNIT THIS VOID EQUALS ACCEPT REJECT
 %token <string> ID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL
@@ -134,7 +134,6 @@ expr:
 	| STRING_LITERAL				{ String_literal($1) }
 	| BOOL_LITERAL					{ Boolean_literal($1) } 
 	| THIS 							{ This }
-	| NULL							{ Null }
 	| NOT expr  					{ Uniop(Not, $2) }
 	| expr PLUS expr				{ Binop($1, Add, $3) }
 	| expr MINUS expr 				{ Binop($1, Sub, $3) }

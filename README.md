@@ -1,5 +1,7 @@
-The kAWK Language "kay-awk" (formerly: GAWK)
------------------
+# kAWK "kay-awk" 
+#(formerly: GAWK)
+
+## The Testing Language
 
 ## Team members: 
 * Albert Cui (System Architect)
@@ -7,18 +9,25 @@ The kAWK Language "kay-awk" (formerly: GAWK)
 * Michael Raimi (Testing and Validation/Language Guru)
 * Mei-Vern Then (System Architect/Language Guru)
 
-## To build:
+## To build and clean up:
+
+make
 
 make clean
 
-make
+## Test suite (in test program):
+
+./test_suite.sh
 
 ## Pretty printer:
 
 ./pretty testprogram.k
 
-## Test Suite (in test program):
+## Code generator:
 
-./test_suite.sh
+./code_gen testprogram.k
 
+## To see output from any program, include a input redirect:
+
+./code_gen < testprogram.k
 
