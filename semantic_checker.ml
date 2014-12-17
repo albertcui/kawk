@@ -440,17 +440,28 @@ let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 			else
 				check_func_decl env f
 
+let rec check_struct_stml (stml : Sast.stmt list) = 
+	List.iter (
+		fun s -> match s with 
+		Sast.Block (sl) ->
+			check_struct_stml sl
+		| Sast.Return(_) -> raise (Failure "No returns are allowed in asserts")
+		| Sast.If(_, s1, s2) -> 
+			check_struct_stml [s1]; check_struct_stml [s2]
+		| Sast.For(_, _, _, s) ->
+			check_struct_stml [s]
+		| Sast.While(_, s) ->
+			check_struct_stml [s]
+		| _ -> ()
+	) stml
+
 let process_assert (scope: symbol_table) a =
 	let (expr, stml) = a in
 	let expr  = check_expr scope expr in
 	let (_, t) = expr in
 	if t <> Sast.Boolean then (raise (Failure "assert expr must be boolean")) else
 	let stml = List.fold_left ( fun a s -> check_stmt scope s :: a) [] stml in
-	let _ = List.iter (
-		fun s -> match s with
-		Return(_) -> raise (Failure "Cannot have return statement in assert block")
-		|_ -> ()
-	) in (expr, stml)
+	let _ = check_struct_stml stml in (expr, stml)
 
 (* let check_struct (scope : symbol_table) s =
 	let scope' = { scope with parent = Some(scope); variables = [] } in
