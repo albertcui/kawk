@@ -240,6 +240,7 @@ let print_func_decl (f : Sast.function_decl) =
 		print_string "}")
 	else
 		(
+			print_string " static ";
 			print_var_types f.ftype;
 			print_string f.fname; 
 			print_string "(";
