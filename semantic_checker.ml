@@ -322,9 +322,9 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 						| Struct_Initialization(t, _, _) -> t in
 						let e = check_expr scope c in
 						let (_, t2) = e in
-						if t <> t2 then raise (Failure "types are not the same") else e :: a
+						if t <> t2 then raise (Failure "types are not the same in struct initialization") else e :: a
 					) [] decl.variable_decls el in (name, Sast.Struct_Initialization(t, name, el), t)
-				| _ -> raise (Failure "Not a struct") in
+				| _ -> raise (Failure "Not a struct") in (*test?*)
 	let (_, decl, t) = triple in
 	if t = Void then
 		raise (Failure "Variable cannot be type void.")
@@ -339,7 +339,7 @@ let rec check_func_stmt (scope : symbol_table) (stml : Sast.stmt list) (ftype : 
 			check_func_stmt scope sl ftype
 		| Sast.Return(e) -> 
 			let (_, t) = e in 
-			if t <> ftype then raise (Failure "return type is incorrect") else ()
+			if t <> ftype then raise (Failure "func return type is incorrect") else ()
 		| Sast.If(_, s1, s2) -> 
 			check_func_stmt scope [s1] ftype; check_func_stmt scope [s2] ftype
 		| Sast.For(_, _, _, s) ->
@@ -357,7 +357,7 @@ let process_func_stmt (scope : symbol_table) (stml : Ast.stmt list) (ftype : Sas
 			check_func_stmt scope sl ftype; stmt :: a
 		| Sast.Return(e) -> 
 			let (_, t) = e in 
-			if t <> ftype then raise (Failure "return type is incorrect") else
+			if t <> ftype then raise (Failure "while processing func statement, return type incorrect") else
 			scope.return_found <- true; stmt :: a 
 		| Sast.If(_, s1, s2) -> 
 			check_func_stmt scope [s1] ftype; check_func_stmt scope [s2] ftype; stmt :: a
@@ -376,12 +376,12 @@ let process_func_units (scope : symbol_table) (u : Ast.unit_decl) (formals : Sas
 					let expr = check_expr scope c in
 					let (_, t2) = expr in
 					if t <> t2
-					then raise (Failure "wrong type")
+					then raise (Failure "while processing func units, wrong type")
 					else expr :: a
 			) [] formals el in
 		let expr = check_expr scope e in 
 		let (_, t ) = expr in 
-		if t <> ftype then raise (Failure "Incorrect return type") else
+		if t <> ftype then raise (Failure "while processing func units, incorrect return type") else
 		Sast.Local_udecl(exprs, expr, b)
 	| Outer_udecl (f, el, e, b) ->
 	(try
