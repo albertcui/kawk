@@ -1,7 +1,13 @@
 open Ast
 
-
-type checked_var_decl =
+type var_types =
+	Void
+	| Int
+	| String
+	| Boolean
+	| Struct of struct_decl
+	| Array of var_types * expression
+and checked_var_decl =
 	Variable of var_types * string
 	| Variable_Initialization of var_types * string * expression
 	| Array_Initialization of var_types * string * expression list
@@ -25,8 +31,6 @@ and struct_decl = {
 }
 and expr_detail =
 	Noexpr
-	| This
-	| Null
 	| IntConst of int
 	| StrConst of string
 	| BoolConst of bool
@@ -37,6 +41,8 @@ and expr_detail =
 	| Uniop of op * expression
 	| Binop of expression * op * expression
 	| Assign of checked_var_decl * expression
+	| Struct_Member_Assign of struct_decl * variable_decl * expression
+	| Array_Member_Assign of checked_var_decl * expression * expression
 and expression = expr_detail * var_types
 and stmt = 
 	Block of stmt list (* { ... } *)

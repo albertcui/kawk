@@ -2,8 +2,6 @@ type op = Add | Sub | Mult | Div | Mod | Equal | Neq | Less | Leq | Greater | Ge
 
 type expr = (* Expressions *)
 	Noexpr (* for (;;) *)
-	| This
-	| Null
 	| Id of string (* foo *)
 	| Integer_literal of int (* 42 *)
 	| String_literal of string (* "foo" *)

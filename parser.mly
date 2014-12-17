@@ -3,7 +3,7 @@
 %token SEMI COLON LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK COMMA
 %token MINUS TIMES DIVIDE MOD STRING INT EOF OR AND NOT PLUS
 %token ASSIGN EQ NEQ LT LEQ GT GEQ RETURN IF ELSE FOR WHILE BOOL
-%token ACCESS STRUCT ASSERT UNIT THIS NULL VOID EQUALS ACCEPT REJECT
+%token ACCESS STRUCT ASSERT UNIT THIS VOID EQUALS ACCEPT REJECT
 %token <string> ID
 %token <int> INT_LITERAL
 %token <string> STRING_LITERAL
@@ -129,33 +129,32 @@ expr_opt:
 
 
 expr: 
-	ID								{ Id($1) }
-	| INT_LITERAL 					{ Integer_literal($1) }
-	| STRING_LITERAL				{ String_literal($1) }
-	| BOOL_LITERAL					{ Boolean_literal($1) } 
-	| THIS 							{ This }
-	| NULL							{ Null }
-	| NOT expr  					{ Uniop(Not, $2) }
-	| expr PLUS expr				{ Binop($1, Add, $3) }
-	| expr MINUS expr 				{ Binop($1, Sub, $3) }
-	| expr TIMES expr 				{ Binop($1, Mult, $3) }
-	| expr DIVIDE expr				{ Binop($1, Div, $3) }
-	| expr MOD expr 				{ Binop($1, Mod, $3) }
-	| expr EQ expr					{ Binop($1, Equal, $3) }
-	| expr NEQ expr					{ Binop($1, Neq, $3) }
-	| expr LT expr					{ Binop($1, Less, $3) }
-	| expr LEQ expr					{ Binop($1, Leq, $3) }
-	| expr GT expr					{ Binop($1, Greater, $3) }
-	| expr GEQ expr					{ Binop($1, Geq, $3) }
-	| expr OR expr					{ Binop ($1, Or, $3) }
-	| expr AND expr					{ Binop ($1, And, $3) }
-	| ID ACCESS ID					{ Access ($1, $3) }
-	| ID ASSIGN expr 				{ Assign ($1, $3) }
-	| ID LPAREN actuals_opt RPAREN 	{ Call ($1, $3) }
-	| ID ACCESS ID ASSIGN expr      { Struct_Member_Assign($1, $3, $5)}
-	| LPAREN expr RPAREN 			{ $2 }
-	| ID LBRACK expr RBRACK         { Array_access($1, $3) }
-	| ID LBRACK expr RBRACK ASSIGN expr 	{ Array_Member_Assign($1, $3, $6) }
+	ID									{ Id($1) }
+	| INT_LITERAL 						{ Integer_literal($1) }
+	| STRING_LITERAL					{ String_literal($1) }
+	| BOOL_LITERAL						{ Boolean_literal($1) }
+	| NOT expr  						{ Uniop(Not, $2) }
+	| expr PLUS expr					{ Binop($1, Add, $3) }
+	| expr MINUS expr 					{ Binop($1, Sub, $3) }
+	| expr TIMES expr 					{ Binop($1, Mult, $3) }
+	| expr DIVIDE expr					{ Binop($1, Div, $3) }
+	| expr MOD expr 					{ Binop($1, Mod, $3) }
+	| expr EQ expr						{ Binop($1, Equal, $3) }
+	| expr NEQ expr						{ Binop($1, Neq, $3) }
+	| expr LT expr						{ Binop($1, Less, $3) }
+	| expr LEQ expr						{ Binop($1, Leq, $3) }
+	| expr GT expr						{ Binop($1, Greater, $3) }
+	| expr GEQ expr						{ Binop($1, Geq, $3) }
+	| expr OR expr						{ Binop ($1, Or, $3) }
+	| expr AND expr						{ Binop ($1, And, $3) }
+	| ID ACCESS ID						{ Access ($1, $3) }
+	| ID ASSIGN expr 					{ Assign ($1, $3) }
+	| ID LPAREN actuals_opt RPAREN 		{ Call ($1, $3) }
+	| ID ACCESS ID ASSIGN expr      	{ Struct_Member_Assign($1, $3, $5) }
+	| ID LBRACK expr RBRACK ASSIGN expr	{ Array_Member_Assign($1, $3, $6) }
+	| LPAREN expr RPAREN 				{ $2 }
+	| ID LBRACK expr RBRACK         	{ Array_access($1, $3) }
+
 actuals_opt:
 	/* nothing */ 	{ [] }
 	| actuals_list 	{ List.rev $1 }

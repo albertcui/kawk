@@ -1,4 +1,4 @@
-int main(){
+void main(){
 	int hi;
 	hi = "Hello";
 }

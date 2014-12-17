@@ -4,3 +4,6 @@ int potat;
 @(size > 1) {}
 int j;
 }
+
+void main(){
+}

@@ -20,10 +20,9 @@ rule token = parse
   | "@" { ASSERT }  | "unit" { UNIT } | '.' { ACCESS }
   | "else" { ELSE } | "if" { IF } (* Keywords *)
   | "while" { WHILE } | "for" { FOR }
-  | "return" { RETURN } 
-  | "struct" { STRUCT } 
-  | "void" { VOID }
-  | "this" { THIS } | "null" { NULL }
+  | "return" { RETURN } | "accept" { ACCEPT }
+  | "struct" { STRUCT } | "reject" { REJECT }
+  | "void" { VOID } 
   | "bool" { BOOL } | "int" { INT } | "str" { STRING } 
   | "equals" { EQUALS }
   | '"'('\\'_ |[^'"'])*'"' as str { STRING_LITERAL(str) }  (* Strings *)
