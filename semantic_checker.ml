@@ -74,6 +74,32 @@ let rec check_id (scope : symbol_table) id =
 	| Call(_, _) as c -> check_call scope c
 	| Access(_, _) as a -> check_access scope a
 	| Struct_Member_Assign(_, _, _) as a -> check_struct_assignment scope a
+	| Array_Member_Assign(_, _, _) as a -> check_array_assignment scope a
+
+and check_array_assignment (scope : symbol_table) a = match a with
+	Ast.Array_Member_Assign(arr, expr, expr2) ->
+		(
+			try
+				let (original_decl, var_type) = check_id scope arr in match var_type with
+					Sast.Array(decl, expr) ->
+						(
+							match decl with
+							Array(array_type, e) ->
+								let access_expr = check_expr scope expr2 in
+								let (_, t) = access_expr in
+								if t <> Sast.Int then
+									raise (Failure "Array access must be type int")
+								else
+									(let assign_expr = check_expr scope expr2 in
+									let (_, t2) = assign_expr in
+									if array_type <> t2 then raise (Failure "type assignment is wrong")
+									else Sast.Array_Member_Assign(original_decl, access_expr, assign_expr), t2)
+							| _ -> raise (Failure ("Not an array"))
+						)
+					| _ -> raise (Failure (arr ^ " is not an array."))
+			with Not_found -> raise (Failure ("Variable " ^ arr ^ " not declared."))
+		)
+	| _ -> raise (Failure "Not an array assignment")
 
 and check_struct_assignment (scope : symbol_table) a = match a with
 	Ast.Struct_Member_Assign(stru, mem, expr) ->
@@ -83,7 +109,6 @@ and check_struct_assignment (scope : symbol_table) a = match a with
 				| Sast.Struct(decl) ->
 					(
 						try
-
 							let v = List.find(
 								fun (v, _) -> match v with
 								Variable(_, s) -> s = mem
