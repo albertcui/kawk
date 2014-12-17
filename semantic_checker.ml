@@ -83,18 +83,15 @@ and check_array_assignment (scope : symbol_table) a = match a with
 				let (original_decl, var_type) = check_id scope arr in match var_type with
 					Sast.Array(decl, expr) ->
 						(
-							match decl with
-							Array(array_type, e) ->
-								let access_expr = check_expr scope expr2 in
-								let (_, t) = access_expr in
-								if t <> Sast.Int then
-									raise (Failure "Array access must be type int")
-								else
-									(let assign_expr = check_expr scope expr2 in
-									let (_, t2) = assign_expr in
-									if array_type <> t2 then raise (Failure "type assignment is wrong")
-									else Sast.Array_Member_Assign(original_decl, access_expr, assign_expr), t2)
-							| _ -> raise (Failure ("Not an array"))
+							let access_expr = check_expr scope expr2 in
+							let (_, t) = access_expr in
+							if t <> Sast.Int then
+								raise (Failure "Array access must be type int")
+							else
+								(let assign_expr = check_expr scope expr2 in
+								let (_, t2) = assign_expr in
+								if decl <> t2 then raise (Failure "type assignment is wrong")
+								else Sast.Array_Member_Assign(decl, access_expr, assign_expr), t2)
 						)
 					| _ -> raise (Failure (arr ^ " is not an array."))
 			with Not_found -> raise (Failure ("Variable " ^ arr ^ " not declared."))
