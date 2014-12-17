@@ -21,6 +21,6 @@ int foo(){
 
 }
 
-unit:main(bar(), 5)]
+unit:main(bar(), 5);
 
-foo()
+foo();
