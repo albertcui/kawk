@@ -147,7 +147,7 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 		List.iter print_asserts s.asserts;
 		print_string "}" *)
 	
-(* let print_unit_decl = function
+ (* let print_unit_decl = function
 	Local_udecl(udecl_params, udecl_check_val, true) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
 	| Local_udecl(udecl_params, udecl_check_val, false) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):reject;\n"
 	| Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "unit:"; print_string (str ^ "(");  print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
@@ -174,7 +174,7 @@ let print_func_decl (f : Sast.function_decl) =
 		(print_var_types f.ftype;
 		print_string f.fname; 
 		print_string "(";
-		print_param_list f.checked_formals; 
+		(* print_param_list f.checked_formals;  *)
 		print_string ") {\n";
 		List.iter print_var_decl f.checked_locals; 
 		List.iter print_stmt f.checked_body;
