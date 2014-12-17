@@ -132,7 +132,9 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 				print_string (String.capitalize s.sname); Printf.printf " %s = new %s();\n" str (String.capitalize s.sname)
 			| _ -> print_var_types var_types; print_string (str ^ ";\n"))
 		| Variable_Initialization(var_types, str, expr) -> print_var_types var_types; Printf.printf "%s = " str; print_expr_semi expr
-		| Array_Initialization(var_types, str, expr_list) -> print_var_types var_types; Printf.printf "[] %s = { " str; print_expr_list_comma (List.rev expr_list); print_string "};\n"
+		| Array_Initialization(var_types, str, expr_list) -> (match var_types with 
+			Array(var_types, _) -> print_var_types var_types; Printf.printf "[] %s = { " str; print_expr_list_comma (List.rev expr_list); print_string "};\n"
+			| _ -> raise (Failure "Not an array"))
 		| Struct_Initialization(var_types, str, expr_list) -> match var_types with
 			Struct(decl) ->
 				let s = List.find (fun j -> j.original_struct = decl) j_struct_decl_list in
