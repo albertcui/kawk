@@ -28,7 +28,7 @@ let print_op = function
 	| Geq -> print_string ">= "
 	| Or -> print_string "|| "
 	| And -> print_string "&& "
-	| Not -> print_string "! " 
+	| Not -> print_string "!" 
 
 let get_instance_name = function
 	Variable(_, str) -> str
@@ -51,19 +51,26 @@ let rec print_expr (e : Sast.expression) =
 	| StrConst(str) -> Printf.printf "%s " str
 	| BoolConst(b) -> Printf.printf "%B " b
 	(* | ArrayAccess(str, expr) -> Printf.printf "%s[" str; print_expr expr; print_string "]" *)
-	(* | Assign(str, expr) -> Printf.printf "%s = " str; print_expr expr *)
-	(* | Uniop(op, expr) -> print_op op; print_expr expr *)
+	(* JANKY FIX FOR WHERE EQUALS IS??*)
+	| Assign(decl, expr) -> let str = match decl with
+		Variable(_, str) -> str
+		(* if not a Variable we drop the unnecessary stuff *)
+		| Variable_Initialization(_, str, _) -> str
+		| Array_Initialization(_, str, _) -> str
+		| Struct_Initialization(_, str, _) -> str in
+		print_string (str^" = "); print_expr expr
+	| Uniop(op, expr) -> print_op op; print_expr expr
 	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2 
 	| Call(f, expr_list) -> 
-		if f.fname = "exit" then (print_string "System.out.println("; List.iter print_expr expr_list; print_string ");\n System.exit(0);") 
+		if f.fname = "exit" then (print_string "\n\tSystem.out.println("; List.iter print_expr expr_list; print_string ");\n\tSystem.exit(0)") 
 		else
-			(if f.fname = "print" then print_string "System.out.println("
+			((if f.fname = "print" then print_string "\n\tSystem.out.println("
 			else Printf.printf "%s(" f.fname);
 			let rec print_expr_list_comma = function
 				[] -> print_string ""
 				| e::[] -> print_expr e
 				| e::tl -> print_expr e; print_string ", "; print_expr_list_comma tl 
-				in print_expr_list_comma expr_list; print_string ") "
+				in print_expr_list_comma expr_list; print_string ")")
 	(* | Access(struc, decl) -> *)
 (* 		let j_s_decl = List.find ( fun j -> j.original_struct = struc) j_struct_decl_list in
 		let var = List.find ( fun j_v -> j_v.the_variable = decl) j_s_decl in
@@ -84,10 +91,10 @@ let rec print_expr_list_comma (el : Sast.expression list) = match el with
 	| hd::tl -> print_expr hd; print_string ", "; print_expr_list_comma tl 
 
 let rec print_stmt = function
-	Block(stmt_list) -> print_string "{"; List.iter print_stmt stmt_list; print_string "}\n"
+	Block(stmt_list) -> print_string "{";  List.iter print_stmt stmt_list; print_string "}\n"
 	| Expr(expr) -> print_expr_semi expr
 	| Return(expr) -> print_string "return "; print_expr_semi expr
-	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr_semi expr; print_string ")"; print_stmt stmt1; print_stmt stmt2
+	| If(expr, stmt1, stmt2) -> print_string "if ("; print_expr expr; print_string ") "; print_stmt stmt1; print_string "else "; print_stmt stmt2
 	| For(expr1, expr2, expr3, stmt) -> print_string "for ("; print_expr_semi expr1; print_expr_semi expr2; print_expr expr3; print_stmt stmt 
 	| While(expr, stmt) -> print_string "while ("; print_expr_semi expr; print_string ")"; print_stmt stmt
 
@@ -103,7 +110,7 @@ let rec print_var_types = function
 		print_expr expr;
 		print_string "] "
  
- let print_param v =
+let print_param v =
 	let (var_types, _) = v in match var_types with
 	Variable(var_types, str) -> print_var_types var_types; print_string str
 	(* if not a Variable we drop the unnecessary stuff *)
