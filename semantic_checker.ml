@@ -75,6 +75,32 @@ let rec check_id (scope : symbol_table) id =
 	| Binop(_, _, _) as b -> check_op scope b
 	| Call(_, _) as c -> check_call scope c
 	| Access(_, _) as a -> check_access scope a
+	| Struct_Member_Assign(_, _, _) as a -> check_struct_assignment scope a
+
+and check_struct_assignment (scope : symbol_table) a = match a with
+	Ast.Struct_Member_Assign(stru, mem, expr) ->
+		(
+			try
+				let s = find_struct scope.structs stru in
+				(
+					try
+						let v = List.find(
+							fun (v, _) -> match v with
+							Variable(_, s) -> s = mem
+							| Variable_Initialization(_, s, _) -> s = mem
+							| Array_Initialization(_, s, _) -> s = mem
+							| Struct_Initialization(_, s, _) -> s = mem
+						) s.variable_decls in
+						let expr = check_expr scope expr in
+						let (_, t) = v in
+						let (_, t2) = expr in
+						if t <> t2 then raise (Failure "type assignment is wrong")
+						else Sast.Struct_Member_Assignment(s, v, expr), t
+					with Not_found -> raise (Failure (mem ^ " not found in struct " ^ stru))
+				)
+			with Not_found -> raise (Failure ("Struct " ^ stru ^ " not declared."))
+		)
+	| _ -> raise (Failure "Not a struct assignment")
 
 and check_op (scope : symbol_table) binop = match binop with
 	Ast.Binop(xp1, op, xp2) ->

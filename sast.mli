@@ -37,6 +37,7 @@ and expr_detail =
 	| Uniop of op * expression
 	| Binop of expression * op * expression
 	| Assign of checked_var_decl * expression
+	| Struct_Member_Assignment of struct_decl * variable_decl * expression
 and expression = expr_detail * var_types
 and stmt = 
 	Block of stmt list (* { ... } *)
