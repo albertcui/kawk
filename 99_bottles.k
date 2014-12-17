@@ -2,7 +2,7 @@
  	struct bott_beer bb;
  	int i;
  	bb.bottles_of_beer = a;
- 	for(i = a; i > 0; (i = (i + 1))) {
+ 	for(i = a; i > 0; (i = (i - 1))) {
  		bb.bottles_of_beer = i;
  	}
  	return 0;
