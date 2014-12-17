@@ -1,8 +1,4 @@
- void main() {
- 	unit:run_gcd(24, 54):equals(6):accept;
- }
-
- struct gcd {
+struct gcd {
   	int a; 
   	int b;
   	int result;
@@ -11,8 +7,11 @@
  	@(!(a = a)) { print("gcd is"); print(a); result=a; }
  }
 
- int run_gcd (a, b) {
+ int run_gcd (int a, int b) {
  	struct gcd gg = { a, b };
- 	//gg.a = a;
  	return gg.result;
+ }
+
+  void main() {
+ 	unit:run_gcd(24, 54):equals(6):accept;
  }
