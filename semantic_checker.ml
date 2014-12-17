@@ -367,7 +367,11 @@ let process_assert (scope: symbol_table) a =
 	let (_, t) = expr in
 	if t <> Boolean then (raise (Failure "assert expr must be boolean")) else
 	let stml = List.fold_left ( fun a s -> check_stmt scope s :: a) [] stml in
-	(expr, stml)
+	let _ = List.iter (
+		fun s -> match s with
+		Return(_) -> raise (Failure "Cannot have return statement in assert block")
+		|_ -> ()
+	) in (expr, stml)
 
 (* let check_struct (scope : symbol_table) s =
 	let scope' = { scope with parent = Some(scope); variables = [] } in
