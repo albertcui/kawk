@@ -55,8 +55,7 @@ let rec print_expr (e : Sast.expression) =
 	| IntConst(i) -> Printf.printf "%d " i
 	| StrConst(str) -> Printf.printf "%s " str
 	| BoolConst(b) -> Printf.printf "%B " b
-	| ArrayAccess(checked_var_decl, expr) -> (*Printf.printf "%s[" str;*)Printf.printf"asdf"; print_checked_var_decl checked_var_decl; print_expr expr; print_string "]"
-	(* JANKY FIX FOR WHERE EQUALS IS??*)
+	| ArrayAccess(checked_var_decl, expr) -> print_string(get_instance_name checked_var_decl); print_string "["; print_expr expr; print_string "]"
 	| Assign(decl, expr) -> let str = match decl with
 		Variable(_, str) -> str
 		(* if not a Variable we drop the unnecessary stuff *)
@@ -76,17 +75,19 @@ let rec print_expr (e : Sast.expression) =
 				| e::[] -> print_expr e
 				| e::tl -> print_expr e; print_string ", "; print_expr_list_comma tl 
 				in print_expr_list_comma expr_list; print_string ")")
-	(* | Access(struc, decl) -> *)
-(* 		let j_s_decl = List.find ( fun j -> j.original_struct = struc) j_struct_decl_list in
-		let var = List.find ( fun j_v -> j_v.the_variable = decl) j_s_decl in
-		if (List.length var.asserts) <> 0 then  *)
+	| Access(struc, instance, decl) -> 
+		let j_s_decl = List.find ( fun j -> j.original_struct = struc) j_struct_decl_list in
+		let var = List.find ( fun j_v -> let (v, _) = j_v.the_variable in v = decl) j_s_decl.variable_decls in
+		print_string (get_instance_name instance); print_string("."^var.name)
 	| Struct_Member_Assign(struc, instance, decl, expr) ->
 		let j_s_decl = List.find ( fun j -> j.original_struct = struc) j_struct_decl_list in
 		let var = List.find ( fun j_v -> j_v.the_variable = decl) j_s_decl.variable_decls in
 		if (List.length var.asserts) <> 0 then (print_string (get_instance_name instance); print_string (".set_" ^ var.name ^ "("); print_expr expr; print_string ")")
 		else
 			(print_string (get_instance_name instance); print_string "."; print_string (var.name ^ "="); print_expr_semi expr)
-	| _ -> print_string ""
+	| Array_Member_Assign (decl, idx, expr) -> 
+		print_string (get_instance_name decl); print_string ("["); print_expr expr; print_string("] = "); print_expr expr
+	(* | _ -> print_string "" *)
 and print_expr_semi (e : Sast.expression) = 
 	print_expr e; print_string ";\n"
 
@@ -138,43 +139,6 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 				print_string (String.capitalize s.sname); Printf.printf " %s = new %s(" str (String.capitalize s.sname); print_expr_list_comma expr_list; print_string ");\n"
 			| _ -> raise (Failure "shouldn't happen")
 
-(*
-	struct potato { 
-		int size; 
-		int potat; 
-		@(potate<2 ) 
-			{print "Asdasldkfasd"}
-		int j;
-		@(potato == 1 ) {print "ASfdasdfas"}
-	}
-
-
- 	public class Potato {
-		 int size;
-		 int potat;
-
-		public Blah(size,potat){
-			this.size = size;
-			this.potat = potat;
-		}
-
-		public getSize(){
-			return size;
-		}
-		public setSize(int size){
-			this.size = size;
-			if (this.size>1){
-				return ("AHH THIS IS > 1");
-			}
-		}
-		public getPotat(){
-			return size;
-		}
-		public setPotat(int potat){
-			this.potat = potat;
-		}
- 	}
-*)
 let rec print_function_params (v : Jast.j_var_struct_decl list) = match v with
 	[] -> print_string "";
 	| hd::[] -> print_param hd.the_variable;
@@ -239,9 +203,9 @@ let rec print_param_list (p : Sast.variable_decl list) = match p with
 let print_func_decl (f : Sast.function_decl) =
 	if f.fname = "main" then 
 		(print_string "public static void main(String[] args) {\n";
-		List.iter print_var_decl f.checked_locals;
-		List.iter print_stmt f.checked_body;
-		List.iter print_unit_decl f.checked_units; 
+		List.iter print_var_decl (List.rev f.checked_locals);
+		List.iter print_stmt (List.rev f.checked_body);
+		List.iter print_unit_decl (List.rev f.checked_units); 
 		print_string "}")
 	else
 		(
@@ -251,9 +215,9 @@ let print_func_decl (f : Sast.function_decl) =
 			print_string "(";
 			print_param_list f.checked_formals; 
 			print_string ") {\n";
-			List.iter print_var_decl f.checked_locals; 
-			List.iter print_stmt f.checked_body;
-			(*List.iter print_unit_decl f.checked_units; *)
+			List.iter print_var_decl (List.rev f.checked_locals); 
+			List.iter print_stmt (List.rev f.checked_body);
+			List.iter print_unit_decl (List.rev f.checked_units); 
 			print_string "}\n"
 		)
 
