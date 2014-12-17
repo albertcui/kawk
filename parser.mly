@@ -30,7 +30,10 @@
 
 program:
 	/* nothing */ 	{ [], [], [], [] }
-	| program sdecl vdecl fdecl udecl { let (str, var, func, unt) = $1 in $2::str, $3::var, $4::func, $5::unt }
+	| program sdecl { let (str, var, func, unt) = $1 in $2::str, var, func, unt }
+	| program vdecl { let (str, var, func, unt) = $1 in str, $2::var, func, unt } /* int world = 4; */
+	| program fdecl { let (str, var, func, unt) = $1 in str, var, $2::func, unt }
+	| program udecl { let (str, var, func, unt) = $1 in str, var, func, $2::unt }
 
 fdecl:
 	the_type ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list udecl_list RBRACE
