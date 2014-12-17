@@ -188,9 +188,9 @@ and check_access (scope : symbol_table) a = match a with
 					let var = List.find (
 						fun (t, _) -> match t with
 						Variable(_, n) -> n = id
-						| Variable_Initialization(_, n, _) -> n = id
-						| Array_Initialization(_, n, _) -> n = id
-						| Struct_Initialization(_, n, _) -> n = id
+						| Variable_Initialization(_, n, _) -> n = id2
+						| Array_Initialization(_, n, _) -> n = id2
+						| Struct_Initialization(_, n, _) -> n = id2
 					) decl.variable_decls in
 					let (var, _) = var in 
 					let t = match var with
@@ -199,7 +199,7 @@ and check_access (scope : symbol_table) a = match a with
 						| Array_Initialization(t, _, _) -> t
 						| Struct_Initialization(t, _, _) -> t
 					in Sast.Access(decl, var), t
-				with Not_found -> raise (Failure "Struct or access not found."))
+				with Not_found -> raise (Failure (id ^ " is type struct " ^ decl.sname ^ " which does not have a member named " ^ id2)))
 			| _ -> raise (Failure (id ^ " is not a struct."))
 		)
 	| _ -> raise (Failure "Not an access")	
