@@ -153,11 +153,13 @@ and check_op (scope : symbol_table) binop = match binop with
 
 and check_array_access (scope : symbol_table) a = match a with
 	Ast.Array_access(id, expr) ->
-		let (decl, t) = check_id scope id in
-		let e1 = check_expr scope expr in
-		let (_, t2) = e1 in
-		if t2 <> Int then raise (Failure "Array access must be integer.") else
-		Sast.ArrayAccess(decl, e1), t
+		let (decl, t) = check_id scope id in (match t with
+		Sast.Array(t, _) ->
+			let e1 = check_expr scope expr in
+			let (_, t2) = e1 in
+			if t2 <> Int then raise (Failure "Array access must be integer.") else
+			Sast.ArrayAccess(decl, e1), t
+		| _ -> raise (Failure "this id is not an array"))
 	| _ -> raise (Failure "Not an array access")
 
 and check_assign (scope : symbol_table) a = match a with
