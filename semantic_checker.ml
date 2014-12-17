@@ -64,9 +64,9 @@ let rec check_id (scope : symbol_table) id =
 		(try 
 			let (decl, t) = check_id scope str in Sast.Id(decl), t 
 		with Not_found -> raise (Failure ("Id named " ^ str ^ " not found")))
-	| Integer_literal(i) -> Sast.IntConst(i), Int
-	| String_literal(str) -> Sast.StrConst(str), String
-	| Boolean_literal(b) -> Sast.BoolConst(b), Boolean
+	| Integer_literal(i) -> Sast.IntConst(i), Sast.Int
+	| String_literal(str) -> Sast.StrConst(str), Sast.String
+	| Boolean_literal(b) -> Sast.BoolConst(b), Sast.Boolean
 	| Array_access(_, _) as a -> check_array_access scope a
 	| Assign(_, _) as a -> check_assign scope a
 	| Uniop(op, expr) as u -> check_uni_op scope u
@@ -113,18 +113,18 @@ and check_op (scope : symbol_table) binop = match binop with
 					if (t1 <> String || t2 <> String) then raise (Failure "Incorrect types for +")
 					else String
 				else Int
-			| Sub -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for - ") else Int
-			| Mult -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for * ") else Int
-			| Div -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for / ") else Int
-			| Mod -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for % ") else Int
-			| Equal -> if (t1 <> t2) then raise (Failure "Incorrect types for = ") else Boolean
-			| Neq -> if (t1 <> t2) then raise (Failure "Incorrect types for != ") else Boolean
-			| Less -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for < ") else Int
-			| Leq -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for <= ") else Int
-			| Greater -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for > ") else Int
-			| Geq -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for >= ") else Int
-			| Or -> if (t1 <> Boolean || t2 <> Boolean) then raise (Failure "Incorrect types for | ") else Boolean
-			| And -> if (t1 <> Boolean || t2 <> Boolean) then raise (Failure "Incorrect types for & ") else Boolean
+			| Sub -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for - ") else Sast.Int
+			| Mult -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for * ") else Sast.Int
+			| Div -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for / ") else Sast.Int
+			| Mod -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for % ") else Sast.Int
+			| Equal -> if (t1 <> t2) then raise (Failure "Incorrect types for = ") else Sast.Boolean
+			| Neq -> if (t1 <> t2) then raise (Failure "Incorrect types for != ") else Sast.Boolean
+			| Less -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for < ") else Sast.Boolean
+			| Leq -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for <= ") else Sast.Boolean
+			| Greater -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for > ") else Sast.Boolean
+			| Geq -> if (t1 <> Int || t2 <> Int) then raise (Failure "Incorrect types for >= ") else Sast.Boolean
+			| Or -> if (t1 <> Boolean || t2 <> Boolean) then raise (Failure "Incorrect types for | ") else Sast.Boolean
+			| And -> if (t1 <> Boolean || t2 <> Boolean) then raise (Failure "Incorrect types for & ") else Sast.Boolean
 			| Not -> raise (Failure "! is a unary operator.")
 		in Sast.Binop(e1, op, e2), t
 	| _ -> raise (Failure "Not an op")
@@ -410,7 +410,7 @@ let process_assert (scope: symbol_table) a =
 	let (expr, stml) = a in
 	let expr  = check_expr scope expr in
 	let (_, t) = expr in
-	if t <> Boolean then (raise (Failure "assert expr must be boolean")) else
+	if t <> Sast.Boolean then (raise (Failure "assert expr must be boolean")) else
 	let stml = List.fold_left ( fun a s -> check_stmt scope s :: a) [] stml in
 	let _ = List.iter (
 		fun s -> match s with
