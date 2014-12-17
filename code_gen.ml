@@ -226,8 +226,8 @@ let print_struct_decl (s : Jast.j_struct_decl) =
 	print_string "\n}\n"
 	
 let print_unit_decl (u : Sast.unit_decl) = match u with
-	Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) System.out.println(\"The test passes\"); \n"
-	| Outer_udecl(str, udecl_params, udecl_check_val, false) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) System.out.println(\"The test fails\");\n"
+	Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) System.out.println(\"The test passes\"); else System.out.println(\"The test fails\"); \n"
+	| Outer_udecl(str, udecl_params, udecl_check_val, false) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) System.out.println(\"The test fails\"); else System.out.println(\"The test passes\");\n"
 	| Local_udecl(udecl_params, udecl_check_val, false) -> print_string "local_inner_false:"
 	| Local_udecl(udecl_params, udecl_check_val, true) -> print_string "local_inner_true:"
 
