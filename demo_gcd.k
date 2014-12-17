@@ -2,13 +2,13 @@ struct gcd {
   	int a; 
   	int b;
   	int result;
- 	@(!(a > b)) { a=a-b; }
- 	@(!(a < b)) { b=b-a; }
- 	@(!(a = a)) { print("gcd is"); print(a); result=a; }
+ 	@(!(a > b))  { a=a-b; }
+ 	@(!(a < b))  { b=b-a; }
+ 	@(!(a == a)) { print("gcd is"); print(a); result=a; }
  }
 
  int run_gcd (int a, int b) {
- 	struct gcd gg = { a, b };
+ 	struct gcd gg = { a, b, 0 };
  	return gg.result;
  }
 

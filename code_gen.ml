@@ -63,7 +63,7 @@ let rec print_expr (e : Sast.expression) =
 		| Array_Initialization(_, str, _) -> str
 		| Struct_Initialization(_, str, _) -> str in
 		print_string (str^" = "); print_expr expr
-	| Uniop(op, expr) -> print_op op; print_expr expr
+	| Uniop(op, expr) -> print_op op; print_string "("; print_expr expr; print_string ")"
 	| Binop(expr1, op, expr2) -> print_expr expr1; print_op op; print_expr expr2 
 	| Call(f, expr_list) -> 
 		if f.fname = "exit" then (print_string "\n\tSystem.out.println("; List.iter print_expr expr_list; print_string ");\n\tSystem.exit(0)") 
@@ -136,7 +136,7 @@ let rec print_var_decl  (v : Sast.variable_decl) =
 		| Struct_Initialization(var_types, str, expr_list) -> match var_types with
 			Struct(decl) ->
 				let s = List.find (fun j -> j.original_struct = decl) j_struct_decl_list in
-				print_string (String.capitalize s.sname); Printf.printf " %s = new %s(" str (String.capitalize s.sname); print_expr_list_comma expr_list; print_string ");\n"
+				print_string (String.capitalize s.sname); Printf.printf " %s = new %s(" str (String.capitalize s.sname); print_expr_list_comma (List.rev expr_list); print_string ");\n"
 			| _ -> raise (Failure "shouldn't happen")
 
 let rec print_function_params (v : Jast.j_var_struct_decl list) = match v with
@@ -190,8 +190,8 @@ let print_struct_decl (s : Jast.j_struct_decl) =
 	print_string "\n}\n"
 	
 let print_unit_decl (u : Sast.unit_decl) = match u with
-	Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) System.out.println(\"The test passes\"); else System.out.println(\"The test fails\"); \n"
-	| Outer_udecl(str, udecl_params, udecl_check_val, false) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) System.out.println(\"The test fails\"); else System.out.println(\"The test passes\");\n"
+	Outer_udecl(str, udecl_params, udecl_check_val, true) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) {System.out.println(\"The test passes\");} else {System.out.println(\"The test fails\");} \n"
+	| Outer_udecl(str, udecl_params, udecl_check_val, false) -> print_string "if("; print_string (str.fname ^ "(");  print_expr_list_comma udecl_params; print_string ")==("; print_expr udecl_check_val; print_string ")) {System.out.println(\"The test fails\");} else {System.out.println(\"The test passes\");}\n"
 	| Local_udecl(udecl_params, udecl_check_val, false) -> print_string "local_inner_false:"
 	| Local_udecl(udecl_params, udecl_check_val, true) -> print_string "local_inner_true:"
 
