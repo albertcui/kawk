@@ -247,19 +247,31 @@ let rec check_stmt (scope : symbol_table) (stmt : Ast.stmt) = match stmt with
 	| Return(e) -> Sast.Return(check_expr scope e)
 	| If(expr, stmt1, stmt2) -> 
 		let new_expr = check_expr scope expr in
-		let new_stmt1 = check_stmt scope stmt1 in
-		let new_stmt2 = check_stmt scope stmt2 in
-		Sast.If(new_expr, new_stmt1, new_stmt2)
+		let (_, t) = new_expr in
+		if t <> Sast.Boolean then
+			raise (Failure "If statement must have a boolean expression")
+		else 
+			let new_stmt1 = check_stmt scope stmt1 in
+			let new_stmt2 = check_stmt scope stmt2 in
+			Sast.If(new_expr, new_stmt1, new_stmt2)
 	| For(expr1, expr2, expr3, stmt) ->
 		let expr = check_expr scope expr1 in
 		let expr2 = check_expr scope expr2 in
-		let expr3 = check_expr scope expr3 in
-		let stmt = check_stmt scope stmt in
-		Sast.For(expr, expr2, expr3, stmt)
+		let (_, t) = expr2 in
+		if t <> Sast.Boolean then
+			raise (Failure "If statement must have a boolean expression")
+		else 
+			let expr3 = check_expr scope expr3 in
+			let stmt = check_stmt scope stmt in
+			Sast.For(expr, expr2, expr3, stmt)
 	| While(expr, stmt) ->
 		let expr = check_expr scope expr in
-		let stmt = check_stmt scope stmt in
-		Sast.While(expr, stmt)
+		let (_, t) = expr in
+		if t <> Sast.Boolean then
+			raise (Failure "If statement must have a boolean expression")
+		else 
+			let stmt = check_stmt scope stmt in
+			Sast.While(expr, stmt)
 
 let rec check_var_type (scope : symbol_table) (v : Ast.var_types) = match v with
 	Ast.Void -> Sast.Void
