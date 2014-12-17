@@ -20,11 +20,10 @@ type symbol_table = {
 
 type translation_environment = {
 	mutable scope : symbol_table; (* symbol table for vars *)
-	mutable found_main: bool;
 }
 
 let the_print_function = {
-	ftype = Ast.Void;  
+	ftype = Ast.Void;
 	fname = "print"; 
 	checked_formals = [];
 	checked_locals = [];
@@ -210,7 +209,7 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 				let (_, t2 ) = expr in 
 				if t <> t2 then raise (Failure "wrong type") else expr :: a
 			) [] el in (name, Sast.Array_Initialization(t, name, el), t)
-		| Struct_Initialization(t, name, el) ->
+		| Struct_Initialization(t, name, el) -> 
 			(
 				match t with
 					Struct(id) -> 
@@ -309,41 +308,30 @@ let process_func_units (scope : symbol_table) (u : Ast.unit_decl) (formals : Sas
 		Sast.Outer_udecl(f, exprs, expr, b)
 	with Not_found -> raise (Failure ("Function not found with name " ^ f)))
 
-let check_func_decl (env : translation_environment) (f : Ast.func_decl) =
-	let scope' = { env.scope with parent = Some(env.scope); variables = []; return_found = false } in
-	let formals = List.fold_left (
-		fun a f -> match f with
-		Ast.Param(t, n) -> scope'.variables <- (n, Sast.Variable(t, n), t) :: scope'.variables; (Sast.Variable(t, n), t) :: a
-	) [] f.formals in
-	let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
-	let statements = process_func_stmt scope' f.body f.ftype in 
-	let units = List.fold_left ( fun a u -> process_func_units scope' u formals f.ftype :: a) [] f.units in
-	if env.scope.return_found then 
-		let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
-		env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
-	else if f.ftype = Void then 
-		let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
-			env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
-	else
-		raise (Failure ("No return for function " ^ f.fname ^ " when return expected."))
-
 let process_func_decl (env : translation_environment) (f : Ast.func_decl) =
 	try
 		let _ = find_func env.scope.functions f.fname in
 			raise (Failure ("Function already declared with name " ^ f.fname))
 	with Not_found ->
 		if f.fname = "print" then raise (Failure "A function cannot be named 'print'")
-		else
-			if f.fname = "main" then
-				(
-					if f.ftype <> Void || (List.length f.formals) <> 0 then 
-					raise (Failure "main function must be type void with no parameters")
-					else 
-						let func = check_func_decl env f in
-						env.found_main <- true; func
-					)
+		else (
+			let scope' = { env.scope with parent = Some(env.scope); variables = []; return_found = false } in
+			let formals = List.fold_left (
+				fun a f -> match f with
+				Ast.Param(t, n) -> scope'.variables <- (n, Sast.Variable(t, n), t) :: scope'.variables; (Sast.Variable(t, n), t) :: a
+			) [] f.formals in
+			let locals = List.fold_left ( fun a l -> process_var_decl scope' l :: a ) [] f.locals in
+			let statements = process_func_stmt scope' f.body f.ftype in 
+			let units = List.fold_left ( fun a u -> process_func_units scope' u formals f.ftype :: a) [] f.units in
+			if env.scope.return_found then 
+				let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
+				env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
+			else if f.ftype = Void then 
+				let f = { ftype = f.ftype; fname = f.fname; checked_formals = formals; checked_locals = locals; checked_body = statements; checked_units = units } in
+					env.scope.functions <- f :: env.scope.functions; (* throw away scope of function *) f
 			else
-				check_func_decl env f
+				raise (Failure ("No return for function " ^ f.fname ^ " when return expected."))
+		)
 
 let process_assert (scope: symbol_table) a =
 	let (expr, stml) = a in
@@ -406,7 +394,7 @@ let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) 
 let check_program (p : Ast.program) =
 	(* let _ = print_string ("check_program called \n") in *)
 	let s = { parent = None; variables = []; functions = []; structs = []; return_found = false } in
-	let env = { scope = s; found_main = false } in
+	let env = { scope = s } in
 	let (structs, vars, funcs, units) = p in 	
 	let structs = 
 		List.fold_left (
@@ -426,14 +414,14 @@ let check_program (p : Ast.program) =
 		) [] units in
 (* 	try *)
 	(* let _ = print_string ("length of env.scope.functions is " ^ string_of_int (List.length env.scope.functions) ^ "\n") in *)
-(*     let rec findMain = function
+    let rec findMain = function
     	[] -> false
     	| hd::tl ->
     		if hd.fname = "main" then
     			(if (hd.ftype <> Void || (List.length hd.checked_formals) <> 0) then (raise (Failure "main function must be type void with no arguments")) else true)
     		else findMain tl
-    in let foundMain  = findMain env.scope.functions in *)
-    (if env.found_main then structs, globals, funcs, units else (raise (Failure "No main function defined??")))
+    in let foundMain  = findMain env.scope.functions in
+    (if foundMain then structs, globals, funcs, units else (raise (Failure "No main function defined??")))
 	    	(* let _ = List.iter( fun f -> if f.fname = "main" then print_string "Found main" else(*  print_string ("did not find main, found " ^ f.fname ^ "\n")) env.scope.functions in  *)
 		let _ = List.find( fun f -> f.fname = "main" ) env.scope.functions in
 		structs, globals, funcs, units
