@@ -157,6 +157,7 @@ let print_asserts a_list =
 
 let print_j_var_decl (dec : j_var_struct_decl) =
 	print_var_decl dec.the_variable;
+	print_string (string_of_int (List.length dec.asserts));
 	if (List.length dec.asserts) <> 0 then
 		(
 			print_string("\npublic set_" ^ dec.name ^ "(");
@@ -169,16 +170,21 @@ let print_j_var_decl (dec : j_var_struct_decl) =
 
 let print_constructors (name : string) (s : Jast.j_var_struct_decl list) =
 	print_string ("public " ^ (String.capitalize name) ^ "(");
-	print_function_params s
+	print_function_params s;
+	print_string "){\n";
+	List.iter (
+		fun dec -> print_string ("this." ^ dec.name ^ "=" ^ dec.name ^ ";\n")
+	) s;
+	print_string "\n}\n"
 
 let print_struct_decl (s : Jast.j_struct_decl) =
 	print_string "class ";
-	print_string s.sname;
+	print_string (String.capitalize s.sname);
 	print_string " {\n";
 	List.iter print_j_var_decl s.variable_decls;
 	(* Make the constructors *)
 	print_constructors s.sname s.variable_decls;
-	print_string "}"
+	print_string "\n}\n"
 	
  (* let print_unit_decl = function
 	Local_udecl(udecl_params, udecl_check_val, true) -> print_string "unit("; print_expr_list_comma udecl_params; print_string "):equals("; print_expr udecl_check_val; print_string "):accept;\n"
@@ -213,11 +219,11 @@ let print_func_decl (f : Sast.function_decl) =
 let code_gen j =
 	let _ = print_string "public class Program {\n" in
 	let (structs, vars, funcs, unts) = j in
-			(* List.iter print_struct_decl structs; *)
+			List.iter print_struct_decl structs;
 			List.iter print_var_decl vars;
 			(* List.iter print_func_decl (List.rev funcs); *)
 			(* List.iter print_unit_decl unts; *)
-			print_string "\n}"
+			print_string "\n}\n"
 
 let _ =
 	let lexbuf = Lexing.from_channel stdin in

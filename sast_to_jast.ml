@@ -24,8 +24,8 @@ let rec check_j_in_a (j : Jast.j_var_struct_decl) (e : Sast.expression) =
 
 let rec check_assert_expr (var_decl : Jast.j_var_struct_decl) a (e : Sast.expression) (var_list : Jast.j_var_struct_decl list) =
 	try
-		let _ = List.find(fun other_assert -> other_assert = a) var_decl.asserts in []
-	with Not_found -> if check_j_in_a var_decl e then [a] else []
+		let _ = List.find(fun other_assert -> other_assert = a) var_decl.asserts in false
+	with Not_found -> if check_j_in_a var_decl e then true else false
 
 (* iterate over s.variable_decls to make 
 	corresponding j_var_struct_decls intially with empty asserts*)
@@ -39,14 +39,18 @@ let process_struct_decl (s : Sast.struct_decl) =
 			| Struct_Initialization(_, id, _) -> id in
 		{the_variable = v; asserts = []; name = id} :: a
 	) [] s.variable_decls in
-	List.iter (
+	let _ = List.iter (
 		fun (var_decl : Jast.j_var_struct_decl) ->
 			let asserts = List.fold_left (
 				fun a the_assert -> 
 				let (e, _)  = the_assert in
-				check_assert_expr var_decl the_assert e j_var_decls @ a
-			) var_decl.asserts s.asserts in var_decl.asserts <- asserts
-	) j_var_decls; { sname = s.sname; variable_decls = j_var_decls; original_struct = s; j_name = "" }
+				if check_assert_expr var_decl the_assert e j_var_decls then
+					the_assert :: a
+				else a
+			) [] s.asserts in
+			var_decl.asserts <- asserts
+	) j_var_decls in
+	{ sname = s.sname; variable_decls = j_var_decls; original_struct = s; j_name = "" }
 
 let sast_to_jast p = 
 	let (structs, vars, funcs, units) = p in 	
