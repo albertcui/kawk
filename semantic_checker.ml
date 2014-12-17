@@ -102,7 +102,7 @@ and check_struct_assignment (scope : symbol_table) a = match a with
 	Ast.Struct_Member_Assign(stru, mem, expr) ->
 		(
 			try
-				let (decl, var_type) = check_id scope stru in match var_type with
+				let (original_decl, var_type) = check_id scope stru in match var_type with
 				| Sast.Struct(decl) ->
 					(
 						try
@@ -117,7 +117,7 @@ and check_struct_assignment (scope : symbol_table) a = match a with
 							let (_, t) = v in
 							let (_, t2) = expr in
 							if t <> t2 then raise (Failure "type assignment is wrong")
-							else Sast.Struct_Member_Assign(decl, v, expr), var_type
+							else Sast.Struct_Member_Assign(decl, original_decl, v, expr), var_type
 						with Not_found -> raise (Failure (mem ^ " not found in struct " ^ stru))
 					)
 				| _ -> raise (Failure (stru ^ " is not a struct."))
@@ -202,7 +202,7 @@ and check_call (scope : symbol_table) c = match c with
 
 and check_access (scope : symbol_table) a = match a with
 	Ast.Access(id, id2) ->
-		(let (_, t) = check_id scope id in match t with
+		(let (original_decl, t) = check_id scope id in match t with
 			Struct(decl) ->
 				(try
 					let var = List.find (
@@ -218,7 +218,7 @@ and check_access (scope : symbol_table) a = match a with
 						| Variable_Initialization(t, _, _) -> t
 						| Array_Initialization(t, _, _) -> t
 						| Struct_Initialization(t, _, _) -> t
-					in Sast.Access(decl, var), t
+					in Sast.Access(decl, original_decl, var), t
 				with Not_found -> raise (
 					Failure (id ^ " is type struct " ^ decl.sname ^ " which does not have a member named " ^ id2)
 				))

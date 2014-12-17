@@ -37,11 +37,11 @@ and expr_detail =
 	| ArrayAccess of checked_var_decl * expression
 	| Id of checked_var_decl
 	| Call of function_decl * expression list
-	| Access of struct_decl * checked_var_decl
+	| Access of struct_decl * checked_var_decl * checked_var_decl
 	| Uniop of op * expression
 	| Binop of expression * op * expression
 	| Assign of checked_var_decl * expression
-	| Struct_Member_Assign of struct_decl * variable_decl * expression
+	| Struct_Member_Assign of struct_decl * checked_var_decl * variable_decl * expression
 	| Array_Member_Assign of checked_var_decl * expression * expression
 and expression = expr_detail * var_types
 and stmt = 
