@@ -253,7 +253,7 @@ let print_func_decl (f : Sast.function_decl) =
 			print_string ") {\n";
 			List.iter print_var_decl f.checked_locals; 
 			List.iter print_stmt f.checked_body;
-			List.iter print_unit_decl f.checked_units; 
+			(*List.iter print_unit_decl f.checked_units; *)
 			print_string "}\n"
 		)
 
