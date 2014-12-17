@@ -291,14 +291,14 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 			let t = check_var_type scope t in
 			let expr = check_expr scope expr in
 			let (_, t2 ) = expr in
-			if t <> t2 then raise (Failure "wrong type") else (name, Sast.Variable_Initialization(t, name, expr), t) 
+			if t <> t2 then raise (Failure "wrong type for variable initialization") else (name, Sast.Variable_Initialization(t, name, expr), t) 
 		| Array_Initialization(t, name, el) ->
 			let t = check_var_type scope t in
 			let el = List.fold_left (
 				fun a elem ->
 				let expr = check_expr scope elem in 
 				let (_, t2 ) = expr in 
-				if t <> t2 then raise (Failure "wrong type") else expr :: a
+				if t <> t2 then raise (Failure "wrong type for array initilization") else expr :: a
 			) [] el in (name, Sast.Array_Initialization(t, name, List.rev el), t)
 		| Struct_Initialization(t, name, el) ->
 			let t = check_var_type scope t in match t with
