@@ -14,11 +14,4 @@ type j_struct_decl = {
 	mutable j_name: string;
 }
 
-(* type j_func_decl = {
-	f_decl: Sast.function_decl; 
-	mutable j_name: string;
-}
-
-type variable_decl
- *)
 type program = j_struct_decl list * variable_decl list * function_decl list * unit_decl list

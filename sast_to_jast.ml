@@ -52,11 +52,3 @@ let sast_to_jast p =
 	let (structs, vars, funcs, units) = p in 	
 	let structs = List.fold_left (fun a s -> process_struct_decl s :: a) [] structs in
 	(structs, vars, funcs, units)
-(* 
-let _ =
-	let lexbuf = Lexing.from_channel stdin in
-	let ast = try
-	Parser.program Scanner.token lexbuf 
-	with _ -> Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; exit (-1) in
-	let sast = check_program ast in
-	sast_to_jast sast  *)

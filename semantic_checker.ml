@@ -3,9 +3,6 @@ open Sast
 open Lexing
 open Map
 
-(* check return exists *)
-(* have to reverse lists lololol *)
-
 type function_table = {
 	funcs : func_decl list
 }
@@ -49,8 +46,6 @@ let find_func (l : function_decl list) f =
 
 let rec check_id (scope : symbol_table) id =
 	try
-		(* let _ = print_string ("check_id called, legnth of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in *)
-		(* let _ = List.iter (fun (n, _, _) -> print_string ("try printing in check_id: " ^ n ^ "\n")) scope.variables in *)
 		let (_, decl, t) = List.find(fun (n, _, _) -> n = id ) scope.variables in
 		decl, t
 	with Not_found -> match scope.parent with
@@ -58,7 +53,6 @@ let rec check_id (scope : symbol_table) id =
 		| _ -> raise Not_found
  
  let rec check_expr (scope : symbol_table) (expr : Ast.expr) = match expr with
- 	(* let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in match expr with *)
 	Noexpr -> Sast.Noexpr, Void
 	| Id(str) -> 
 		(try 
@@ -238,10 +232,6 @@ and check_uni_op (scope : symbol_table) uniop = match uniop with
 			| _ -> raise (Failure "Not a unary operator")
 		)
 	| _ -> raise (Failure "Not a uniop")	
-(* 
-let process_func_formals (env : translation_environment) f =
-	let scope' = { env.scope with parent = Some(env.scope); variables = [] } in
-	let scope' = List.iter (fun var -> scope.variables:: head) *)
 
 let rec check_stmt (scope : symbol_table) (stmt : Ast.stmt) = match stmt with
 	Block(sl) -> Sast.Block(List.fold_left ( fun a s -> (check_stmt scope s) :: a) [] sl)
@@ -293,7 +283,6 @@ let rec check_var_type (scope : symbol_table) (v : Ast.var_types) = match v with
 		else Sast.Array(v, expr) 
 
 let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
-	(* let _ = print_string ("try printing at top of process_var_decl, length of scope.variables is " ^ string_of_int (List.length scope.variables) ^ "\n") in *)
 	let triple = match v with
 		Variable(t, name) ->
 			let t = check_var_type scope t in 
@@ -333,8 +322,8 @@ let process_var_decl (scope : symbol_table) (v : Ast.var_decl) =
 	if t = Void then
 		raise (Failure "Variable cannot be type void.")
 	else 
-		scope.variables <- triple :: scope.variables; (* List.iter (fun (n, _, _) -> print_string ("try printing in process_var_decl:" ^ n ^ "\n")) scope.variables; *) (* Update the scope *)
-		(decl, t)
+		(scope.variables <- triple :: scope.variables;
+		(decl, t))
 
 let rec check_func_stmt (scope : symbol_table) (stml : Sast.stmt list) (ftype : Sast.var_types) = 
 	List.iter (
@@ -467,12 +456,6 @@ let process_assert (scope: symbol_table) a =
 	let stml = List.fold_left ( fun a s -> check_stmt scope s :: a) [] stml in
 	let _ = check_struct_stml stml in (expr, stml)
 
-(* let check_struct (scope : symbol_table) s =
-	let scope' = { scope with parent = Some(scope); variables = [] } in
-	let vars = List.fold_left ( fun a s -> process_var_decl scope' :: a) [] s.variable_decls in
-	(* should we keep result of process_var_decl? *)
-	List.iter process_assert scope' s.asserts *)
-
 let process_struct_decl (env : translation_environment) (s : Ast.struct_decl) =
 	try
 		let _ = find_struct env.scope.structs s.sname in
@@ -494,7 +477,6 @@ let process_global_decl (env : translation_environment) (g : Ast.var_decl) =
 		let _ = check_id env.scope name in
 		raise (Failure ("Variable already declared with name " ^ name))
 	with Not_found -> 
-		(* let _ = print_string ("p_global_decl called, this id not found, legnth of env.scope.variables is " ^ string_of_int (List.length env.scope.variables) ^ "\n") in *)
 		process_var_decl env.scope g
 
 let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) = match u with
@@ -518,7 +500,6 @@ let process_outer_unit_decl (env : translation_environment) (u : Ast.unit_decl) 
 	with Not_found -> raise (Failure ("Function not found with name " ^ f)))
 	
 let check_program (p : Ast.program) =
-	(* let _ = print_string ("check_program called \n") in *)
 	let s = { parent = None; variables = []; functions = []; structs = []; return_found = false } in
 	let env = { scope = s; found_main = false } in
 	let (structs, vars, funcs, units) = p in 	
@@ -538,29 +519,4 @@ let check_program (p : Ast.program) =
 		List.fold_left (
 			fun a u -> process_outer_unit_decl env u :: a
 		) [] units in
-(* 	try *)
-	(* let _ = print_string ("length of env.scope.functions is " ^ string_of_int (List.length env.scope.functions) ^ "\n") in *)
-(*     let rec findMain = function
-    	[] -> false
-    	| hd::tl ->
-    		if hd.fname = "main" then
-    			(if (hd.ftype <> Void || (List.length hd.checked_formals) <> 0) then (raise (Failure "main function must be type void with no arguments")) else true)
-    		else findMain tl
-    in let foundMain  = findMain env.scope.functions in *)
     (if env.found_main then structs, globals, funcs, units else (raise (Failure "No main function defined.")))
-	    	(* let _ = List.iter( fun f -> if f.fname = "main" then print_string "Found main" else(*  print_string ("did not find main, found " ^ f.fname ^ "\n")) env.scope.functions in  *)
-		let _ = List.find( fun f -> f.fname = "main" ) env.scope.functions in
-		structs, globals, funcs, units
-	with Not_found -> raise (Failure "No main function defined.") *)
-
-let print_position outx lexbuf =
-  let pos = lexbuf.lex_curr_p in
-  Printf.fprintf outx "%s:%d:%d" pos.pos_fname
-    pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
-
-(* let _ =
-	let lexbuf = Lexing.from_channel stdin in
-	let program =
-		try Parser.program Scanner.token lexbuf 
-		with _ -> Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; exit (-1) in 
-	check_program program *)

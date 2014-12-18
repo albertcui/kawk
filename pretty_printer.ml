@@ -41,9 +41,6 @@ let rec print_expr_list_comma = function
 	| hd::[] -> print_expr hd
 	| hd::tl -> print_expr hd; print_string ", "; print_expr_list_comma tl 
 
-(* and print_expr_comma expr =
-	print_expr expr; print_string ", "
-	 *)
 let print_expr_semi e = 
 	print_expr e; print_string ";\n"
 
