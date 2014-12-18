@@ -2,8 +2,7 @@ open Sast
 open Jast
 open Semantic_checker
 open Lexing
-(* open Map
- *)
+
 let find_decl (var_decl : Sast.checked_var_decl) (var_list : Jast.j_var_struct_decl list) =
 	List.find (fun v -> let (v, _) = v.the_variable in v = var_decl) var_list
 
